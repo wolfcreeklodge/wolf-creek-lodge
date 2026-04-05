@@ -1,0 +1,258 @@
+:root {
+  /* Methow Valley palette — warm earth tones with mountain twilight */
+  --color-timber: #2C1810;
+  --color-saddle: #5C3A21;
+  --color-rawhide: #A67B5B;
+  --color-wheat: #D4B896;
+  --color-parchment: #F2E8D9;
+  --color-snow: #FAF7F2;
+  --color-pine: #2D4A3E;
+  --color-creek: #4A7C6F;
+  --color-dusk: #8B4E6A;
+  --color-ember: #C7522A;
+  --color-gold: #D4A333;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-timber);
+  background: var(--color-snow);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Hero ──────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(74, 124, 111, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 78, 106, 0.06) 0%, transparent 60%),
+    linear-gradient(175deg, var(--color-snow) 0%, var(--color-parchment) 50%, var(--color-wheat) 100%);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 80px,
+      rgba(44, 24, 16, 0.015) 80px,
+      rgba(44, 24, 16, 0.015) 81px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 80px,
+      rgba(44, 24, 16, 0.015) 80px,
+      rgba(44, 24, 16, 0.015) 81px
+    );
+  pointer-events: none;
+}
+
+.hero-brand {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.5rem;
+}
+
+.hero-brand svg {
+  width: 80px;
+  height: 80px;
+  opacity: 0.7;
+}
+
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--color-timber);
+  margin-bottom: 0.5rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-saddle);
+}
+
+.hero-location {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-rawhide);
+  margin-bottom: 2.5rem;
+}
+
+.hero-divider {
+  position: relative;
+  z-index: 1;
+  width: 120px;
+  height: 1px;
+  background: var(--color-rawhide);
+  margin: 0 auto 2.5rem;
+  opacity: 0.4;
+}
+
+.hero-description {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--color-saddle);
+  max-width: 540px;
+  margin-bottom: 3rem;
+}
+
+/* ── Properties ──────────────────────────────────── */
+
+.properties {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.property-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(166, 123, 91, 0.15);
+  border-radius: 2px;
+  padding: 2rem 1.5rem;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.property-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(166, 123, 91, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(44, 24, 16, 0.08);
+}
+
+.property-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-timber);
+  margin-bottom: 0.5rem;
+}
+
+.property-card .beds {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-creek);
+  margin-bottom: 0.75rem;
+}
+
+.property-card p {
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--color-saddle);
+}
+
+/* ── Status Banner ────────────────────────────────── */
+
+.status-banner {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-timber);
+  color: var(--color-parchment);
+  padding: 0.6rem 1.4rem;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status-banner .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-creek);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ── Footer ───────────────────────────────────────── */
+
+.footer {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-rawhide);
+  border-top: 1px solid rgba(166, 123, 91, 0.1);
+}
+
+.footer a {
+  color: var(--color-creek);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .properties {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .hero {
+    padding: 3rem 1.5rem;
+  }
+}
