@@ -22,7 +22,7 @@ function getMsalClient() {
   });
 }
 
-const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/auth/callback';
+const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/crm/auth/callback';
 const ALLOWED_EMAILS = (process.env.CRM_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -56,8 +56,8 @@ export function setupAuth(app) {
     });
   }
 
-  // Auth routes
-  app.get('/auth/login', async (req, res) => {
+  // Auth routes (mounted at /crm/auth to match frontend base path)
+  app.get('/crm/auth/login', async (req, res) => {
     if (DEV_BYPASS) {
       return res.redirect('/crm/');
     }
@@ -79,7 +79,7 @@ export function setupAuth(app) {
     }
   });
 
-  app.get('/auth/callback', async (req, res) => {
+  app.get('/crm/auth/callback', async (req, res) => {
     if (DEV_BYPASS) {
       return res.redirect('/crm/');
     }
@@ -129,7 +129,7 @@ export function setupAuth(app) {
     }
   });
 
-  app.post('/auth/logout', (req, res) => {
+  app.post('/crm/auth/logout', (req, res) => {
     req.session.destroy((err) => {
       if (err) {
         console.error('Logout error:', err);
@@ -140,7 +140,7 @@ export function setupAuth(app) {
     });
   });
 
-  app.get('/auth/me', (req, res) => {
+  app.get('/crm/auth/me', (req, res) => {
     if (req.session && req.session.user) {
       return res.json({ user: req.session.user });
     }

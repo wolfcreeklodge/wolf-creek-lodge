@@ -25,27 +25,30 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Setup auth (sessions + routes)
+// Setup auth (sessions + routes under /crm/auth)
 setupAuth(app);
 
-// Serve static files in production
+// Serve static files at /crm path (matches Vite base: '/crm/')
 const distPath = join(__dirname, '..', 'dist');
 if (existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use('/crm', express.static(distPath));
 }
 
-// API routes (all require auth)
-app.use('/api/guests', requireAuth, guestsRouter);
-app.use('/api/reservations', requireAuth, reservationsRouter);
-app.use('/api', requireAuth, paymentsRouter);
-app.use('/api/dashboard', requireAuth, dashboardRouter);
-app.use('/api/import', requireAuth, importRouter);
-app.use('/api/export', requireAuth, exportRouter);
-app.use('/api/activity', requireAuth, activityRouter);
+// API routes under /crm/api (all require auth)
+app.use('/crm/api/guests', requireAuth, guestsRouter);
+app.use('/crm/api/reservations', requireAuth, reservationsRouter);
+app.use('/crm/api', requireAuth, paymentsRouter);
+app.use('/crm/api/dashboard', requireAuth, dashboardRouter);
+app.use('/crm/api/import', requireAuth, importRouter);
+app.use('/crm/api/export', requireAuth, exportRouter);
+app.use('/crm/api/activity', requireAuth, activityRouter);
 
-// SPA fallback: any non-API GET request serves index.html
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+// Redirect bare /crm to /crm/
+app.get('/crm', (req, res) => res.redirect('/crm/'));
+
+// SPA fallback: any /crm/* GET request serves index.html
+app.get('/crm/*', (req, res) => {
+  if (req.path.startsWith('/crm/api/') || req.path.startsWith('/crm/auth/')) {
     return res.status(404).json({ error: 'Not found' });
   }
   const indexPath = join(distPath, 'index.html');
@@ -65,6 +68,9 @@ app.get('*', (req, res) => {
   }
 });
 
+// Redirect root to /crm/
+app.get('/', (req, res) => res.redirect('/crm/'));
+
 // Global error handler
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
@@ -73,6 +79,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`Wolf Creek Lodge CRM server running on port ${PORT}`);
+  console.log(`  Base path: /crm`);
   console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`  Auth bypass: ${process.env.DEV_BYPASS_AUTH === 'true' ? 'ENABLED' : 'disabled'}`);
   console.log(`  Database: PostgreSQL via DATABASE_URL`);
