@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { getListing } from '../../../lib/data.js';
+import { getListingPhotos } from '../../../lib/photos.js';
+import PhotoHero from '../../components/PhotoHero';
+import { PhotoStrip } from '../../components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,14 +78,25 @@ export default async function ListingPage({ params }) {
     propertyDetails,
   } = listing;
 
+  const photos = getListingPhotos(id);
+
   return (
     <>
-      {/* Header */}
-      <div className="page-hero">
-        <p className="section-label">{propertyDetails.propertyCategory} &middot; {propertyDetails.listingType}</p>
+      {/* Photo Hero */}
+      <PhotoHero photo={photos.hero} compact>
+        <p className="hero-location">{propertyDetails.propertyCategory} &middot; {propertyDetails.listingType}</p>
         <h1>{title}</h1>
-        <p>{subtitle}</p>
-      </div>
+        <p className="hero-tagline">{subtitle}</p>
+      </PhotoHero>
+
+      {/* Photo Gallery Strip */}
+      {photos.gallery.length > 0 && (
+        <section className="section" style={{ paddingBottom: '2rem' }}>
+          <div className="container">
+            <PhotoStrip photos={photos.gallery} />
+          </div>
+        </section>
+      )}
 
       <div className="container">
         {/* Meta info */}
@@ -232,40 +246,65 @@ export default async function ListingPage({ params }) {
         {/* Pricing */}
         <section className="listing-section">
           <h2 className="listing-section-title">Pricing</h2>
-          <table className="pricing-table">
-            <tbody>
-              <tr>
-                <td>Nightly rate</td>
-                <td>
-                  {pricing.nightlyRate.min === pricing.nightlyRate.max
-                    ? `$${pricing.nightlyRate.min}`
-                    : `$${pricing.nightlyRate.min} – $${pricing.nightlyRate.max}`}
-                </td>
-              </tr>
+
+          <div className="pricing-comparison">
+            <div className="pricing-option pricing-option--direct">
+              <div className="pricing-option-badge">Best Value</div>
+              <h3>Book Direct</h3>
+              <div className="pricing-option-rate">
+                {pricing.nightlyRate.min === pricing.nightlyRate.max
+                  ? `$${Math.round(pricing.nightlyRate.min * 1.1)}`
+                  : `$${Math.round(pricing.nightlyRate.min * 1.1)} – $${Math.round(pricing.nightlyRate.max * 1.1)}`}
+                <span> / night</span>
+              </div>
+              <p className="pricing-option-note">Taxes included &mdash; no platform fees</p>
               {pricing.weekendRate && (
-                <tr>
-                  <td>Weekend rate</td>
-                  <td>${pricing.weekendRate}</td>
-                </tr>
+                <p className="pricing-option-detail">Weekend: ${Math.round(pricing.weekendRate * 1.1)}/night</p>
               )}
               {pricing.discounts?.weekly && (
-                <tr>
-                  <td>Weekly discount</td>
-                  <td className="pricing-highlight">
-                    {pricing.discounts.weekly.percentage}% off &mdash; {pricing.discounts.weekly.description}
-                  </td>
-                </tr>
+                <p className="pricing-option-detail">{pricing.discounts.weekly.percentage}% weekly discount</p>
               )}
               {pricing.discounts?.monthly && (
-                <tr>
-                  <td>Monthly discount</td>
-                  <td className="pricing-highlight">
-                    {pricing.discounts.monthly.percentage}% off &mdash; {pricing.discounts.monthly.description}
-                  </td>
-                </tr>
+                <p className="pricing-option-detail">{pricing.discounts.monthly.percentage}% monthly discount</p>
               )}
-            </tbody>
-          </table>
+              <a
+                href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(title)}&body=${encodeURIComponent(`Hi Bo,\n\nI'd like to book ${title}.\n\nPreferred dates: \nNumber of guests: \n\nThanks!`)}`}
+                className="btn btn--primary btn--large"
+                style={{ marginTop: '1rem', display: 'inline-block', width: '100%', textAlign: 'center' }}
+              >
+                Book Direct via Email
+              </a>
+            </div>
+
+            <div className="pricing-option pricing-option--airbnb">
+              <h3>Airbnb</h3>
+              <div className="pricing-option-rate">
+                {pricing.nightlyRate.min === pricing.nightlyRate.max
+                  ? `$${pricing.nightlyRate.min}`
+                  : `$${pricing.nightlyRate.min} – $${pricing.nightlyRate.max}`}
+                <span> / night</span>
+              </div>
+              <p className="pricing-option-note">+ Airbnb service fee &amp; taxes</p>
+              {pricing.weekendRate && (
+                <p className="pricing-option-detail">Weekend: ${pricing.weekendRate}/night</p>
+              )}
+              {pricing.discounts?.weekly && (
+                <p className="pricing-option-detail">{pricing.discounts.weekly.percentage}% weekly discount</p>
+              )}
+              {pricing.discounts?.monthly && (
+                <p className="pricing-option-detail">{pricing.discounts.monthly.percentage}% monthly discount</p>
+              )}
+              <a
+                href={airbnbUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn--airbnb btn--large"
+                style={{ marginTop: '1rem', display: 'inline-block', width: '100%', textAlign: 'center' }}
+              >
+                Book on Airbnb
+              </a>
+            </div>
+          </div>
         </section>
 
         {/* Cancellation */}
@@ -300,20 +339,28 @@ export default async function ListingPage({ params }) {
         {/* CTA */}
         <section className="listing-section text-center">
           <h2 className="listing-section-title">Ready to Book?</h2>
-          <p className="listing-description mb-4" style={{ margin: '0 auto 2rem' }}>
-            Book directly through Airbnb to secure your dates.
+          <p className="listing-description" style={{ margin: '0 auto 1.5rem', maxWidth: '500px' }}>
+            Book direct for the best rate (taxes included, no platform fees) or use Airbnb for instant confirmation.
           </p>
-          <a
-            href={airbnbUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn--airbnb btn--large"
-          >
-            Book on Airbnb
-          </a>
-          <div className="mt-2">
-            <Link href="/contact" className="btn btn--secondary btn--small">
-              Have Questions? Contact Us
+          <div className="cta-buttons">
+            <a
+              href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(title)}&body=${encodeURIComponent(`Hi Bo,\n\nI'd like to book ${title}.\n\nPreferred dates: \nNumber of guests: \n\nThanks!`)}`}
+              className="btn btn--primary btn--large"
+            >
+              Book Direct via Email
+            </a>
+            <a
+              href={airbnbUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn--airbnb btn--large"
+            >
+              Book on Airbnb
+            </a>
+          </div>
+          <div style={{ marginTop: '1rem' }}>
+            <Link href="/availability" className="btn btn--secondary btn--small">
+              Check Availability
             </Link>
           </div>
         </section>

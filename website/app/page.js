@@ -1,13 +1,22 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getSiteConfig, getListings } from '../lib/data.js';
+import {
+  heroPhoto, nightPhoto, entrancePhoto,
+  greatRoomPhotos, diningKitchenPhotos, bedroomPhotos, libraryPhotos,
+  groundsPhotos, warmingHutPhotos,
+} from '../lib/photos.js';
+import PhotoHero from './components/PhotoHero';
+import FullBleedImage from './components/FullBleedImage';
+import { GallerySection } from './components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
 
 function formatPrice(pricing) {
-  if (pricing.nightlyRate.min === pricing.nightlyRate.max) {
-    return `$${pricing.nightlyRate.min}`;
-  }
-  return `$${pricing.nightlyRate.min}–$${pricing.nightlyRate.max}`;
+  const min = Math.round(pricing.nightlyRate.min * 1.1);
+  const max = Math.round(pricing.nightlyRate.max * 1.1);
+  if (min === max) return `$${min}`;
+  return `$${min}–$${max}`;
 }
 
 function StarRating({ rating, count }) {
@@ -20,10 +29,21 @@ function StarRating({ rating, count }) {
   );
 }
 
-function PropertyCard({ listing }) {
+function PropertyCard({ listing, photo }) {
   const { capacity, pricing, reviews } = listing;
   return (
     <div className="card">
+      {photo && (
+        <div className="card-photo">
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            width={photo.width}
+            height={photo.height}
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        </div>
+      )}
       <div className="card-header">
         {reviews.guestFavorite && (
           <span className="badge badge--guest-fav mb-1" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
@@ -51,12 +71,10 @@ function PropertyCard({ listing }) {
             Details
           </Link>
           <a
-            href={listing.airbnbUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn--airbnb btn--small"
+            href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(listing.title)}`}
+            className="btn btn--primary btn--small"
           >
-            Book on Airbnb
+            Book Direct
           </a>
         </div>
       </div>
@@ -73,32 +91,30 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1>
-            Wolfridge<br />
-            <em>Retreats</em>
-          </h1>
-          <p className="hero-tagline">{siteConfig.tagline}</p>
-          <p className="hero-location">
-            {siteConfig.location} &middot; Methow Valley
-          </p>
-          <div className="hero-rating">
-            <span className="star">&#9733;</span>
-            {siteConfig.host.averageRating} &middot; Superhost &middot; {siteConfig.host.totalReviews} reviews
-          </div>
-          <br />
-          <div className="hero-cta">
-            <Link href="#properties" className="btn btn--primary btn--large">
-              Explore Properties
-            </Link>
-            <Link href="/contact" className="btn btn--secondary btn--large">
-              Get in Touch
-            </Link>
-          </div>
+      {/* Hero — full-width exterior photo */}
+      <PhotoHero photo={heroPhoto}>
+        <h1>
+          Wolfridge<br />
+          <em>Retreats</em>
+        </h1>
+        <p className="hero-tagline">{siteConfig.tagline}</p>
+        <p className="hero-location">
+          {siteConfig.location} &middot; Methow Valley
+        </p>
+        <div className="hero-rating">
+          <span className="star">&#9733;</span>
+          {siteConfig.host.averageRating} &middot; Superhost &middot; {siteConfig.host.totalReviews} reviews
         </div>
-      </section>
+        <br />
+        <div className="hero-cta">
+          <Link href="#properties" className="btn btn--primary btn--large">
+            Explore Properties
+          </Link>
+          <Link href="/contact" className="btn btn--secondary btn--large" style={{ borderColor: 'rgba(255,255,255,0.4)', color: '#fff' }}>
+            Get in Touch
+          </Link>
+        </div>
+      </PhotoHero>
 
       {/* Featured Property — The Retreat */}
       <section id="properties" className="section">
@@ -110,6 +126,15 @@ export default async function Home() {
           </p>
 
           <div className="card--featured">
+            <div className="card-photo">
+              <Image
+                src={greatRoomPhotos[0].src}
+                alt={greatRoomPhotos[0].alt}
+                width={greatRoomPhotos[0].width}
+                height={greatRoomPhotos[0].height}
+                sizes="(max-width: 768px) 100vw, 1200px"
+              />
+            </div>
             <span className="featured-badge">&#9733; Featured &mdash; Designed for Retreats</span>
             <h3 className="card-title" style={{ fontSize: '1.6rem', marginBottom: '0.5rem' }}>
               {retreat.title}
@@ -153,6 +178,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Night mood divider */}
+      <FullBleedImage photo={nightPhoto} className="full-bleed--night" />
+
       {/* Other Properties */}
       <section className="section section--alt">
         <div className="container">
@@ -162,8 +190,63 @@ export default async function Home() {
             Book the House or the Apartment separately for smaller groups.
           </p>
           <div className="property-grid">
-            <PropertyCard listing={house} />
-            <PropertyCard listing={apartment} />
+            <PropertyCard listing={house} photo={diningKitchenPhotos[0]} />
+            <PropertyCard listing={apartment} photo={libraryPhotos[1]} />
+          </div>
+        </div>
+      </section>
+
+      {/* Room-by-Room Gallery */}
+      <section className="section">
+        <div className="container">
+          <p className="section-label">Inside the Retreat</p>
+          <h2 className="section-title">Spaces Designed for Rest</h2>
+          <p className="section-subtitle">
+            Pine ceilings, concrete floors, live-edge wood, and panoramic mountain views in every room.
+          </p>
+          <GallerySection title="Great Room" photos={greatRoomPhotos} />
+          <GallerySection title="Dining & Kitchen" photos={diningKitchenPhotos} />
+          <GallerySection title="Bedrooms" photos={bedroomPhotos} />
+          <GallerySection title="Library & Writing Room" photos={libraryPhotos} />
+        </div>
+      </section>
+
+      {/* Grounds & Landscape */}
+      <section className="section section--alt">
+        <div className="container">
+          <p className="section-label">The Setting</p>
+          <h2 className="section-title">Wide Valley, Deep Forest</h2>
+          <p className="section-subtitle">
+            Set in the heart of the Methow Valley with mountain views in every direction.
+          </p>
+          <div className="grounds-grid">
+            <div className="grounds-lead">
+              <Image
+                src={groundsPhotos[0].src}
+                alt={groundsPhotos[0].alt}
+                width={groundsPhotos[0].width}
+                height={groundsPhotos[0].height}
+                sizes="100vw"
+              />
+            </div>
+            <div className="grounds-secondary">
+              <Image
+                src={groundsPhotos[1].src}
+                alt={groundsPhotos[1].alt}
+                width={groundsPhotos[1].width}
+                height={groundsPhotos[1].height}
+                sizes="(max-width: 640px) 100vw, 50vw"
+              />
+            </div>
+            <div className="grounds-secondary">
+              <Image
+                src={groundsPhotos[2].src}
+                alt={groundsPhotos[2].alt}
+                width={groundsPhotos[2].width}
+                height={groundsPhotos[2].height}
+                sizes="(max-width: 640px) 100vw, 50vw"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -186,6 +269,26 @@ export default async function Home() {
                 <span>{amenity}</span>
               </div>
             ))}
+          </div>
+
+          {/* Warming Hut — shared facility */}
+          <div style={{ marginTop: '3rem' }}>
+            <h3 className="gallery-section-title">Shared Amenities — Warming Hut</h3>
+            <p className="section-subtitle" style={{ marginBottom: '1.5rem' }}>
+              A communal gathering spot on the Wolfridge Resort grounds — available to all guests.
+            </p>
+            <div className="warming-hut-grid photo--muted">
+              {warmingHutPhotos.map((photo, i) => (
+                <Image
+                  key={i}
+                  src={photo.src}
+                  alt={photo.alt}
+                  width={photo.width}
+                  height={photo.height}
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -226,8 +329,31 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Host Section */}
+      {/* Welcome / Your Stay — entrance photo near CTA */}
       <section className="section">
+        <div className="container text-center">
+          <p className="section-label">Your Stay</p>
+          <h2 className="section-title">A Warm Welcome Awaits</h2>
+          <div className="welcome-image">
+            <Image
+              src={entrancePhoto.src}
+              alt={entrancePhoto.alt}
+              width={entrancePhoto.width}
+              height={entrancePhoto.height}
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+          </div>
+          <p className="section-subtitle" style={{ margin: '0 auto 2rem', textAlign: 'center' }}>
+            Self check-in, a stocked kitchen, and everything you need to settle in and unwind.
+          </p>
+          <Link href="/contact" className="btn btn--primary btn--large">
+            Plan Your Visit
+          </Link>
+        </div>
+      </section>
+
+      {/* Host Section */}
+      <section className="section section--alt">
         <div className="container">
           <p className="section-label">Your Host</p>
           <h2 className="section-title mb-4">Meet {siteConfig.host.name}</h2>
