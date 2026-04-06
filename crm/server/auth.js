@@ -28,6 +28,9 @@ const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 export function setupAuth(app) {
+  // Trust proxy (Cloudflare terminates SSL, forwards HTTP)
+  app.set('trust proxy', 1);
+
   // Session middleware using PostgreSQL store
   app.use(session({
     store: new PgStore({
