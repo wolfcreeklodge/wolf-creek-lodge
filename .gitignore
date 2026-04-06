@@ -2,3 +2,7 @@ node_modules/
 .next/
 .env
 *.log
+dist/
+crm/data/
+*.db
+__pycache__/

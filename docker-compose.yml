@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   database:
     image: postgres:16-alpine
@@ -11,6 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -30,6 +29,45 @@ services:
     environment:
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
       NODE_ENV: production
+    depends_on:
+      database:
+        condition: service_healthy
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: wcl-mcp-server
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      MCP_TRANSPORT: sse
+      MCP_PORT: "8081"
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+    depends_on:
+      database:
+        condition: service_healthy
+
+  crm:
+    build:
+      context: ./crm
+      dockerfile: Dockerfile
+    container_name: wcl-crm
+    restart: unless-stopped
+    ports:
+      - "8082:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+      CRM_SESSION_SECRET: ${CRM_SESSION_SECRET:-change_me_in_production}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-https://wolfcreeklodge.us/crm/auth/callback}
+      CRM_ALLOWED_EMAILS: ${CRM_ALLOWED_EMAILS:-wolfcreeklodge@outlook.com}
+      DEV_BYPASS_AUTH: ${DEV_BYPASS_AUTH:-true}
     depends_on:
       database:
         condition: service_healthy

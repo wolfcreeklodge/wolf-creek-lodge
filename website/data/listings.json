@@ -1,0 +1,181 @@
+{
+  "siteConfig": {
+    "brandName": "Wolfridge Retreats",
+    "tagline": "Mountain homes on the Methow Trail — Ski, Bike, Relax",
+    "location": "Winthrop, Washington",
+    "host": {
+      "name": "Bo",
+      "coHost": "Svetlana Pintea",
+      "superhost": true,
+      "totalReviews": 46,
+      "averageRating": 4.93,
+      "yearsHosting": 14
+    },
+    "contactEmail": "wolfcreeklodge@outlook.com",
+    "contactPhone": "+12066810117",
+    "communityInfo": {
+      "name": "Wolfridge Resort Community",
+      "address": "17 Lucky Louie Rd, Winthrop, WA 98862, USA",
+      "sharedAmenities": [
+        "Seasonal heated pool (Memorial Day – Labor Day)",
+        "Year-round hot tub",
+        "Playground",
+        "Methow River access (short walk)",
+        "Methow Community Ski Trail (ski-in/ski-out)",
+        "Methow Valley Trails bike network (summer)"
+      ]
+    }
+  },
+  "listings": [
+    {
+      "id": "wolf-creek-lodge",
+      "airbnbUrl": "https://www.airbnb.com/rooms/845843778306428687",
+      "status": "listed",
+      "title": "3BR Mountain Home on Methow Trail Ski-In/Out",
+      "subtitle": "Entire chalet in Winthrop, Washington",
+      "description": "Modern 3BR, 2BA home at Wolfridge – perfect for families and groups. Sleeps up to 9 with an open, light-filled living area and a fully equipped kitchen for easy meals. Fast Wi-Fi and AC for year-round comfort. Step onto the Methow Community Ski Trail that becomes a bike network in summer. Short walk to the warming hut area with seasonal pool, year-round hot tub, and the Methow River. Scenic location for skiing, hiking, biking, or wellness retreats. For more space add our 1BR apartment next door.",
+      "propertyDetails": {
+        "propertyCategory": "House",
+        "propertyType": "Chalet",
+        "listingType": "Entire place",
+        "yearBuilt": 2023,
+        "propertySizeSqFt": 2500
+      },
+      "capacity": { "maxGuests": 9, "bedrooms": 3, "beds": 11, "bathrooms": 2 },
+      "bedrooms": [
+        { "name": "Bedroom 1", "beds": ["1 king bed"] },
+        { "name": "Bedroom 2", "beds": ["1 queen bed", "1 single bed"] },
+        { "name": "Bedroom 3", "beds": ["4 bunk beds"] }
+      ],
+      "pricing": {
+        "nightlyRate": { "min": 779, "max": 849 },
+        "weekendRate": null,
+        "currency": "USD",
+        "discounts": {
+          "weekly": { "percentage": 21, "description": "For 7 nights or more" },
+          "monthly": { "percentage": 30, "description": "For 28 nights or more" }
+        }
+      },
+      "availability": { "minNights": 1, "maxNights": 25 },
+      "reviews": { "rating": 4.94, "count": 17, "guestFavorite": true, "locationRating": "100% of guests gave 5-star location rating" },
+      "highlights": [
+        { "icon": "self-checkin", "title": "Self check-in", "description": "Check yourself in with the lockbox." },
+        { "icon": "spacious", "title": "Extra spacious", "description": "Guests love this home's spaciousness for a comfortable stay." },
+        { "icon": "location", "title": "Unbeatable location", "description": "100% of guests in the past year gave this location a 5-star rating." }
+      ],
+      "amenities": ["Air conditioning","Backyard","Bathtub","BBQ grill","Bed linens (cotton)","Blender","Board games","Coffee maker","Cooking basics","Dedicated workspace (private)","Dining table (8 spaces)","Dishwasher","Dryer","Ethernet connection","Fire pit","Free parking","Freezer","Hair dryer","Heating (radiant + split ductless)","Hot tub (shared)","Indoor fireplace (electric)","Iron","Kitchen (full)","Microwave","Outdoor dining area","Patio or balcony","Pool (shared, seasonal)","Private entrance","Refrigerator","Rice maker","Room-darkening shades","Ski-in/Ski-out","Sound system","Stove","TV","Washer","Wifi","Wine glasses"],
+      "houseRules": {
+        "checkIn": { "start": "3:00 PM", "end": "Flexible" },
+        "checkOut": "11:00 AM",
+        "petsAllowed": true,
+        "maxPets": 1,
+        "eventsAllowed": false,
+        "smokingAllowed": false,
+        "quietHours": { "start": "11:00 PM", "end": "7:00 AM" }
+      },
+      "cancellationPolicy": "Firm",
+      "accessibilityFeatures": ["Step-free access"],
+      "guestSafety": {
+        "safetyDevices": ["Exterior security camera", "Carbon monoxide alarm", "Smoke alarm"]
+      }
+    },
+    {
+      "id": "wolf-creek-apartment",
+      "airbnbUrl": "https://www.airbnb.com/rooms/873890683808273374",
+      "status": "listed",
+      "title": "Bright 1BR Retreat with On Methow Trail Ski-In/Out",
+      "subtitle": "Entire rental unit in Winthrop, Washington",
+      "description": "Wake up to ridge and open-field views from this new, high-ceiling 1BR at Wolfridge. You're on the Methow Community Ski Trail, which becomes part of the Methow Valley Trails bike network in summer. Quiet, bright, and set up for work and play: fully equipped kitchenette, projector for movie nights, dedicated desk with external monitor and inspiring view, high-speed Wi-Fi, and air conditioning. Seasonal pool, year-round hot tub, playground, and the Methow River are a short walk.",
+      "propertyDetails": {
+        "propertyCategory": "Apartment",
+        "propertyType": "Rental unit",
+        "listingType": "Entire place"
+      },
+      "capacity": { "maxGuests": 2, "bedrooms": 1, "beds": 1, "bathrooms": 1 },
+      "bedrooms": [
+        { "name": "Bedroom", "beds": ["1 bed"] }
+      ],
+      "pricing": {
+        "nightlyRate": { "min": 250, "max": 250 },
+        "weekendRate": 280,
+        "currency": "USD",
+        "discounts": {
+          "weekly": { "percentage": 21, "description": "For 7 nights or more" },
+          "monthly": { "percentage": 35, "description": "For 28 nights or more" }
+        }
+      },
+      "availability": { "minNights": 2, "maxNights": 365 },
+      "reviews": { "rating": 4.92, "count": 25, "guestFavorite": false },
+      "highlights": [
+        { "icon": "self-checkin", "title": "Self check-in", "description": "Check yourself in with the lockbox." },
+        { "icon": "location", "title": "Beautiful area", "description": "Guests love this home's scenic location." },
+        { "icon": "workspace", "title": "Dedicated workspace", "description": "A common area with wifi that's well-suited for working." }
+      ],
+      "amenities": ["Air conditioning","Backyard","BBQ grill","Bed linens (cotton)","Coffee maker (drip)","Dedicated workspace","Dining table (4 spaces)","Dishwasher","Free parking","Heating (split ductless)","Hot tub (shared, year-round)","Kitchen (kitchenette)","Long term stays allowed","Microwave","Outdoor dining area","Patio or balcony (private)","Pool (shared, seasonal)","Private entrance","Refrigerator","Resort access","Ski-in/Ski-out","Sound system (LG, Bluetooth)","Sun loungers","TV (HD, 100-inch projector)","Wifi"],
+      "houseRules": {
+        "checkIn": { "start": "3:00 PM", "end": "Flexible" },
+        "checkOut": "11:00 AM",
+        "petsAllowed": true,
+        "maxPets": 1,
+        "eventsAllowed": true,
+        "smokingAllowed": false
+      },
+      "cancellationPolicy": "Firm",
+      "accessibilityFeatures": [],
+      "guestSafety": {
+        "safetyDevices": ["Exterior security camera", "Noise decibel monitor", "Carbon monoxide alarm", "Smoke alarm"],
+        "propertyInfo": ["Guests must climb stairs"]
+      }
+    },
+    {
+      "id": "wolf-creek-retreat-combo",
+      "airbnbUrl": "https://www.airbnb.com/rooms/1485188435478798238",
+      "status": "listed",
+      "title": "Methow Valley Retreat: 4BR on Trail Ski In/Out",
+      "subtitle": "Entire home in Winthrop, Washington",
+      "description": "Designed for retreats. Book the 3BR house + new 1BR apartment together for 10-12. Ridge and open-field views, bright high-ceiling spaces, fully equipped kitchen + kitchenette, large-screen TV, projector, two desks with monitors, fast Wi-Fi, AC. On the Methow ski and bike trail. Short walk to river, seasonal pool, year-round hot tub, playground. Quiet, inspiring, ideal for yoga and wellness getaways.",
+      "propertyDetails": {
+        "propertyCategory": "House",
+        "propertyType": "Home",
+        "listingType": "Entire place"
+      },
+      "capacity": { "maxGuests": 10, "bedrooms": 4, "beds": 7, "bathrooms": 3 },
+      "bedrooms": [
+        { "name": "Bedroom 1", "beds": ["1 king bed"] },
+        { "name": "Bedroom 2", "beds": ["1 queen bed", "1 single bed"] },
+        { "name": "Bedroom 3", "beds": ["4 bunk beds"] },
+        { "name": "Bedroom 4 (Apartment)", "beds": ["1 bed"] }
+      ],
+      "pricing": {
+        "nightlyRate": { "min": 950, "max": 950 },
+        "weekendRate": 1055,
+        "currency": "USD",
+        "discounts": {
+          "weekly": { "percentage": 10, "description": "For 7 nights or more" },
+          "monthly": { "percentage": 30, "description": "For 28 nights or more" }
+        }
+      },
+      "availability": { "minNights": 1, "maxNights": 365 },
+      "reviews": { "rating": 5.0, "count": 4, "guestFavorite": false },
+      "highlights": [
+        { "icon": "self-checkin", "title": "Self check-in", "description": "Check yourself in with the lockbox." },
+        { "icon": "superhost", "title": "Bo is a Superhost", "description": "Superhosts are experienced, highly rated Hosts." }
+      ],
+      "amenities": ["Air conditioning","Backyard","Bathtub","BBQ grill","Bed linens","Blender","Board games","Coffee maker","Cooking basics","Dedicated workspace","Dining table","Dishwasher","Dryer","Ethernet connection","Fire pit","Free parking","Freezer","Hair dryer","Heating","Hot tub","Indoor fireplace","Iron","Kitchen (full)","Microwave","Outdoor dining area","Patio or balcony","Pool","Private entrance","Refrigerator","Rice maker","Room-darkening shades","Ski-in/Ski-out","Sound system","Stove","TV","Washer","Wifi","Wine glasses"],
+      "houseRules": {
+        "checkIn": { "start": "3:00 PM", "end": "Flexible" },
+        "checkOut": "11:00 AM",
+        "petsAllowed": true,
+        "eventsAllowed": false,
+        "smokingAllowed": false
+      },
+      "cancellationPolicy": "Firm",
+      "isComboListing": true,
+      "combinedListings": ["wolf-creek-lodge", "wolf-creek-apartment"],
+      "accessibilityFeatures": [],
+      "guestSafety": {
+        "safetyDevices": ["Exterior security camera", "Carbon monoxide alarm", "Smoke alarm"]
+      }
+    }
+  ]
+}

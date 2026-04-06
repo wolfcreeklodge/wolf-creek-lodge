@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+  background-color: #FAF7F2;
+  color: #2C1810;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F2E8D9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4B896;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A67B5B;
+}
