@@ -33,7 +33,7 @@ export default function Dashboard() {
         setCheckins(dashData.upcoming_checkins || []);
         setBalances(dashData.outstanding_balances || []);
         setRevenue(dashData.revenue_by_property || []);
-        setActivity(actData.items || actData || []);
+        setActivity(actData.entries || actData.items || []);
       } catch (err) {
         console.error('Dashboard load error:', err);
       } finally {
