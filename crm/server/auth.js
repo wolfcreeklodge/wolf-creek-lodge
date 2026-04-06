@@ -28,9 +28,6 @@ const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 export function setupAuth(app) {
-  // Trust proxy (behind Next.js / Caddy reverse proxy)
-  app.set('trust proxy', 1);
-
   // Session middleware using PostgreSQL store
   app.use(session({
     store: new PgStore({
@@ -46,7 +43,6 @@ export function setupAuth(app) {
       secure: !IS_DEV,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/crm',
     },
   }));
 
@@ -63,7 +59,7 @@ export function setupAuth(app) {
   // Auth routes
   app.get('/auth/login', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/crm/');
+      return res.redirect('/');
     }
 
     const msalClient = getMsalClient();
@@ -85,7 +81,7 @@ export function setupAuth(app) {
 
   app.get('/auth/callback', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/crm/');
+      return res.redirect('/');
     }
 
     const msalClient = getMsalClient();
@@ -126,7 +122,7 @@ export function setupAuth(app) {
       }
 
       req.session.user = { email, name };
-      res.redirect('/crm/');
+      res.redirect('/');
     } catch (err) {
       console.error('Auth callback error:', err);
       res.status(500).json({ error: 'Authentication failed' });
