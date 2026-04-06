@@ -24,6 +24,8 @@ CREATE TABLE site_config (
 CREATE TABLE properties (
     id                  TEXT PRIMARY KEY,
     airbnb_url          TEXT,
+    ical_import_url     TEXT,
+    ical_export_token   TEXT DEFAULT gen_random_uuid(),
     status              TEXT NOT NULL DEFAULT 'listed',
     title               TEXT NOT NULL,
     subtitle            TEXT,
@@ -136,6 +138,52 @@ CREATE TRIGGER trg_check_booking_overlap
     BEFORE INSERT OR UPDATE ON reservations
     FOR EACH ROW EXECUTE FUNCTION check_booking_overlap();
 
+-- Prevent overlapping bookings across mutually exclusive properties
+-- (e.g. booking the Retreat blocks the House and Apartment, and vice versa)
+CREATE OR REPLACE FUNCTION check_cross_property_overlap() RETURNS TRIGGER AS $$
+DECLARE
+    _conflicting_ids TEXT[];
+    _combo JSONB;
+BEGIN
+    -- Case 1: booking a combo listing — check its component properties
+    SELECT combined_listings INTO _combo
+    FROM properties
+    WHERE id = NEW.property_id AND is_combo_listing = TRUE;
+
+    IF _combo IS NOT NULL AND jsonb_array_length(_combo) > 0 THEN
+        SELECT array_agg(elem::TEXT)
+        INTO _conflicting_ids
+        FROM jsonb_array_elements_text(_combo) AS elem;
+    ELSE
+        -- Case 2: booking an individual unit — find any combo that includes it
+        SELECT array_agg(p.id)
+        INTO _conflicting_ids
+        FROM properties p
+        WHERE p.is_combo_listing = TRUE
+          AND p.combined_listings @> to_jsonb(NEW.property_id);
+    END IF;
+
+    IF _conflicting_ids IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1 FROM reservations
+            WHERE property_id = ANY(_conflicting_ids)
+              AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000')
+              AND status NOT IN ('cancelled', 'no_show')
+              AND check_in < NEW.check_out
+              AND check_out > NEW.check_in
+        ) THEN
+            RAISE EXCEPTION 'Booking dates conflict with a related property reservation (cross-property exclusivity)';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_cross_property_overlap
+    BEFORE INSERT OR UPDATE ON reservations
+    FOR EACH ROW EXECUTE FUNCTION check_cross_property_overlap();
+
 -- ==========================================================================
 -- Payments
 -- ==========================================================================
@@ -166,6 +214,20 @@ CREATE TABLE activity_log (
 );
 
 CREATE INDEX idx_activity_timestamp ON activity_log(logged_at DESC);
+
+-- ==========================================================================
+-- iCal sync log
+-- ==========================================================================
+CREATE TABLE ical_sync_log (
+    id              BIGSERIAL PRIMARY KEY,
+    property_id     TEXT NOT NULL REFERENCES properties(id),
+    synced_at       TIMESTAMPTZ DEFAULT now(),
+    events_found    INTEGER,
+    events_added    INTEGER,
+    events_removed  INTEGER,
+    status          TEXT NOT NULL CHECK (status IN ('success','error')),
+    error_message   TEXT
+);
 
 -- ==========================================================================
 -- Sessions (for CRM auth)

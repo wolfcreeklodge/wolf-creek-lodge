@@ -13,6 +13,7 @@ function NavLinks() {
     <>
       <Link href="/">Home</Link>
       <Link href="/#properties">Properties</Link>
+      <Link href="/availability">Availability</Link>
       <Link href="/area">The Area</Link>
       <Link href="/about">About</Link>
       <Link href="/contact">Contact</Link>

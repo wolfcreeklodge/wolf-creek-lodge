@@ -72,5 +72,17 @@ services:
       database:
         condition: service_healthy
 
+  ical-sync:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: wcl-ical-sync
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+    depends_on:
+      database:
+        condition: service_healthy
+
 volumes:
   pgdata:
