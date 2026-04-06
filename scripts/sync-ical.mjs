@@ -189,6 +189,11 @@ async function syncProperty(property) {
 
     await client.query("BEGIN");
 
+    // Disable booking overlap triggers for iCal imports — Airbnb manages
+    // its own blocking, so these are authoritative records
+    await client.query("ALTER TABLE reservations DISABLE TRIGGER trg_check_booking_overlap");
+    await client.query("ALTER TABLE reservations DISABLE TRIGGER trg_check_cross_property_overlap");
+
     const feedUids = new Set();
 
     for (const ev of events) {
@@ -256,6 +261,10 @@ async function syncProperty(property) {
       }
     }
 
+    // Re-enable triggers
+    await client.query("ALTER TABLE reservations ENABLE TRIGGER trg_check_booking_overlap");
+    await client.query("ALTER TABLE reservations ENABLE TRIGGER trg_check_cross_property_overlap");
+
     // Log success
     await client.query(
       `INSERT INTO ical_sync_log (property_id, events_found, events_added, events_removed, status)
@@ -271,6 +280,8 @@ async function syncProperty(property) {
 
     return { propertyId, eventsFound, eventsAdded, eventsRemoved, status: "success" };
   } catch (err) {
+    await client.query("ALTER TABLE reservations ENABLE TRIGGER trg_check_booking_overlap").catch(() => {});
+    await client.query("ALTER TABLE reservations ENABLE TRIGGER trg_check_cross_property_overlap").catch(() => {});
     await client.query("ROLLBACK").catch(() => {});
 
     console.error(`    ERROR: ${err.message}`);
