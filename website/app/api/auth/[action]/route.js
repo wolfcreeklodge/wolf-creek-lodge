@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSession, getMsalClient, ALLOWED_EMAILS, REDIRECT_URI, DEV_BYPASS } from '../../../../lib/auth.js';
 
+// Use the public origin for redirects, not the internal Docker hostname
+const PUBLIC_ORIGIN = process.env.WEBSITE_REDIRECT_URI
+  ? new URL(process.env.WEBSITE_REDIRECT_URI).origin
+  : 'https://wolfcreeklodge.us';
+
 export async function GET(request, { params }) {
   const { action } = await params;
 
@@ -10,7 +15,7 @@ export async function GET(request, { params }) {
     if (DEV_BYPASS) {
       session.user = { email: 'dev@wolfcreeklodge.us', name: 'Dev User' };
       await session.save();
-      return NextResponse.redirect(new URL('/availability', request.url));
+      return NextResponse.redirect(`${PUBLIC_ORIGIN}/availability`);
     }
 
     const msalClient = getMsalClient();
@@ -30,7 +35,7 @@ export async function GET(request, { params }) {
       const session = await getSession();
       session.user = { email: 'dev@wolfcreeklodge.us', name: 'Dev User' };
       await session.save();
-      return NextResponse.redirect(new URL('/availability', request.url));
+      return NextResponse.redirect(`${PUBLIC_ORIGIN}/availability`);
     }
 
     const msalClient = getMsalClient();
@@ -62,7 +67,7 @@ export async function GET(request, { params }) {
       session.user = { email, name };
       await session.save();
 
-      return NextResponse.redirect(new URL('/availability', request.url));
+      return NextResponse.redirect(`${PUBLIC_ORIGIN}/availability`);
     } catch (err) {
       console.error('Auth callback error:', err);
       return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
