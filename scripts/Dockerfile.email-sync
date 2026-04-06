@@ -1,0 +1,7 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY package-email-sync.json package.json
+COPY package-lock.json* ./
+RUN npm install
+COPY sync-email.mjs ./
+CMD ["sh", "-c", "while true; do node sync-email.mjs; echo 'Next email sync in 5 minutes...'; sleep 300; done"]

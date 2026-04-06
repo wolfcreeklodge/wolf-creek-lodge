@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession, getMsalClient, ALLOWED_EMAILS, REDIRECT_URI, DEV_BYPASS } from '../../../../lib/auth.js';
+import pool from '../../../../lib/db.js';
 
 // Use the public origin for redirects, not the internal Docker hostname
 const PUBLIC_ORIGIN = process.env.WEBSITE_REDIRECT_URI
@@ -24,7 +25,7 @@ export async function GET(request, { params }) {
     }
 
     const authUrl = await msalClient.getAuthCodeUrl({
-      scopes: ['openid', 'profile', 'email', 'User.Read'],
+      scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
       redirectUri: REDIRECT_URI,
     });
     return NextResponse.redirect(authUrl);
@@ -52,7 +53,7 @@ export async function GET(request, { params }) {
     try {
       const result = await msalClient.acquireTokenByCode({
         code,
-        scopes: ['openid', 'profile', 'email', 'User.Read'],
+        scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
         redirectUri: REDIRECT_URI,
       });
 
@@ -66,6 +67,22 @@ export async function GET(request, { params }) {
       const session = await getSession();
       session.user = { email, name };
       await session.save();
+
+      // Persist Graph API tokens for email sync
+      if (result.accessToken) {
+        try {
+          await pool.query(`
+            UPDATE email_sync_state SET
+              access_token = $1,
+              refresh_token = COALESCE($2, refresh_token),
+              token_expires_at = $3,
+              updated_at = now()
+            WHERE id = 1
+          `, [result.accessToken, result.refreshToken || null, result.expiresOn || null]);
+        } catch (e) {
+          console.error('Failed to store Graph API tokens:', e.message);
+        }
+      }
 
       return NextResponse.redirect(`${PUBLIC_ORIGIN}/availability`);
     } catch (err) {

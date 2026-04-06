@@ -10,6 +10,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/02-email-sync.sql:/docker-entrypoint-initdb.d/02-email-sync.sql:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -86,6 +87,21 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+    depends_on:
+      database:
+        condition: service_healthy
+
+  email-sync:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.email-sync
+    container_name: wcl-email-sync
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
     depends_on:
       database:
         condition: service_healthy

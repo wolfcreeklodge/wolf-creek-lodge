@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import EmailList from '../components/EmailList';
 
 export default function GuestDetail() {
   const { id } = useParams();
@@ -129,6 +130,10 @@ export default function GuestDetail() {
       ) : (
         <p className="text-rawhide text-sm">No reservations yet.</p>
       )}
+
+      {/* Emails */}
+      <h2 className="text-lg font-display font-bold text-timber mb-3 mt-8">Emails</h2>
+      <EmailList guestId={id} />
     </div>
   );
 }

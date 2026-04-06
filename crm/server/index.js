@@ -11,6 +11,7 @@ import dashboardRouter from './routes/dashboard.js';
 import importRouter from './routes/import.js';
 import exportRouter from './routes/export.js';
 import activityRouter from './routes/activity.js';
+import emailsRouter from './routes/emails.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/dashboard', requireAuth, dashboardRouter);
 app.use('/api/import', requireAuth, importRouter);
 app.use('/api/export', requireAuth, exportRouter);
 app.use('/api/activity', requireAuth, activityRouter);
+app.use('/api/emails', requireAuth, emailsRouter);
 
 // SPA fallback: any non-API GET request serves index.html
 app.get('*', (req, res) => {

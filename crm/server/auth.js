@@ -72,7 +72,7 @@ export function setupAuth(app) {
 
     try {
       const authUrl = await msalClient.getAuthCodeUrl({
-        scopes: ['openid', 'profile', 'email', 'User.Read'],
+        scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
         redirectUri: REDIRECT_URI,
       });
       res.redirect(authUrl);
@@ -100,7 +100,7 @@ export function setupAuth(app) {
     try {
       const result = await msalClient.acquireTokenByCode({
         code,
-        scopes: ['openid', 'profile', 'email', 'User.Read'],
+        scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
         redirectUri: REDIRECT_URI,
       });
 
@@ -125,6 +125,28 @@ export function setupAuth(app) {
       }
 
       req.session.user = { email, name };
+
+      // Persist Graph API tokens for email sync (if mailbox owner logs in)
+      if (result.accessToken) {
+        try {
+          await pool.query(`
+            UPDATE email_sync_state SET
+              access_token = $1,
+              refresh_token = COALESCE($2, refresh_token),
+              token_expires_at = $3,
+              updated_at = now()
+            WHERE id = 1
+          `, [
+            result.accessToken,
+            result.refreshToken || null,
+            result.expiresOn || null,
+          ]);
+          console.log(`Stored Graph API tokens for ${email}`);
+        } catch (tokenErr) {
+          console.error('Failed to store Graph API tokens:', tokenErr.message);
+        }
+      }
+
       res.redirect('/');
     } catch (err) {
       console.error('Auth callback error:', err);
