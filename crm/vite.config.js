@@ -10,6 +10,7 @@ export default defineConfig({
       '/auth': 'http://localhost:3000',
     },
   },
+  base: '/crm/',
   build: {
     outDir: 'dist',
   },

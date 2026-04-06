@@ -19,7 +19,7 @@ export default function ImportWizard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/import/upload', {
+      const res = await fetch('/crm/api/import/upload', {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -41,7 +41,7 @@ export default function ImportWizard() {
     setError(null);
 
     try {
-      const res = await fetch('/api/import/commit', {
+      const res = await fetch('/crm/api/import/commit', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

@@ -35,7 +35,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/auth/me', { credentials: 'include' })
+    fetch('/crm/auth/me', { credentials: 'include' })
       .then((res) => {
         if (res.ok) return res.json();
         return null;

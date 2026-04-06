@@ -59,7 +59,7 @@ export function setupAuth(app) {
   // Auth routes
   app.get('/auth/login', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/');
+      return res.redirect('/crm/');
     }
 
     const msalClient = getMsalClient();
@@ -81,7 +81,7 @@ export function setupAuth(app) {
 
   app.get('/auth/callback', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/');
+      return res.redirect('/crm/');
     }
 
     const msalClient = getMsalClient();
@@ -122,7 +122,7 @@ export function setupAuth(app) {
       }
 
       req.session.user = { email, name };
-      res.redirect('/');
+      res.redirect('/crm/');
     } catch (err) {
       console.error('Auth callback error:', err);
       res.status(500).json({ error: 'Authentication failed' });
