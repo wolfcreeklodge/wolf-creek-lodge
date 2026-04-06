@@ -28,6 +28,9 @@ const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 export function setupAuth(app) {
+  // Trust proxy (behind Next.js / Caddy reverse proxy)
+  app.set('trust proxy', 1);
+
   // Session middleware using PostgreSQL store
   app.use(session({
     store: new PgStore({
@@ -43,6 +46,7 @@ export function setupAuth(app) {
       secure: !IS_DEV,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/crm',
     },
   }));
 
