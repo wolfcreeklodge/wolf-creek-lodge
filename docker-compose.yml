@@ -29,6 +29,12 @@ services:
     environment:
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
       NODE_ENV: production
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      WEBSITE_AUTH_SECRET: ${WEBSITE_AUTH_SECRET:-change_me_website_auth_secret_32ch}
+      ADMIN_ALLOWED_EMAILS: ${CRM_ALLOWED_EMAILS:-wolfcreeklodge@outlook.com}
+      WEBSITE_REDIRECT_URI: ${WEBSITE_REDIRECT_URI:-https://wolfcreeklodge.us/api/auth/callback}
     depends_on:
       database:
         condition: service_healthy

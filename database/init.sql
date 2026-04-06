@@ -327,4 +327,16 @@ VALUES
     TRUE, '["wolf-creek-lodge", "wolf-creek-apartment"]', 0
 );
 
+-- ==========================================================================
+-- Seed: sentinel guest for calendar blocks
+-- ==========================================================================
+INSERT INTO guests (id, first_name, last_name, source, notes)
+VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'BLOCK',
+  'Owner/Maintenance',
+  'other',
+  'Sentinel guest for calendar blocks (owner stays, maintenance, etc.)'
+);
+
 COMMIT;
