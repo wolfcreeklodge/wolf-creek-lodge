@@ -45,7 +45,7 @@ async function ensureTables() {
       id              INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
       access_token    TEXT,
       refresh_token   TEXT,
-      token_expiry    TIMESTAMPTZ,
+      token_expires_at    TIMESTAMPTZ,
       delta_link      TEXT,
       updated_at      TIMESTAMPTZ DEFAULT now()
     );
@@ -83,7 +83,7 @@ async function ensureTables() {
 
 async function getSyncState() {
   const { rows } = await pool.query(
-    `SELECT refresh_token, delta_link, access_token, token_expiry
+    `SELECT refresh_token, delta_link, access_token, token_expires_at
      FROM email_sync_state
      WHERE id = 1`
   );
@@ -142,7 +142,7 @@ async function acquireAccessToken(refreshToken) {
   // Store refreshed tokens
   const tokenUpdates = {
     access_token: result.accessToken,
-    token_expiry: result.expiresOn
+    token_expires_at: result.expiresOn
       ? new Date(result.expiresOn).toISOString()
       : null,
   };
@@ -374,7 +374,7 @@ async function main() {
         // Clear the stale tokens
         await updateSyncState({
           access_token: null,
-          token_expiry: null,
+          token_expires_at: null,
         });
         return;
       }
