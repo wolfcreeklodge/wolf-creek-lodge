@@ -97,6 +97,9 @@ export function calcNights(checkIn, checkOut) {
  */
 export function getPropertyLabel(property) {
   const map = {
+    'wolf-creek-lodge': 'The House',
+    'wolf-creek-apartment': 'The Apartment',
+    'wolf-creek-retreat-combo': 'The Retreat',
     house: 'The House',
     apartment: 'The Apartment',
     retreat: 'The Retreat',

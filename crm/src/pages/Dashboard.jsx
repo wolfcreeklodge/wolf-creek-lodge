@@ -29,11 +29,41 @@ export default function Dashboard() {
           api.get('/api/activity', { limit: 20 }),
         ]);
 
-        setStats(dashData.stats || {});
-        setCheckins(dashData.upcoming_checkins || []);
+        // Flatten upcoming_checkins_7d from { property_id: [...] } to flat array
+        const checkinsByProp = dashData.upcoming_checkins_7d || {};
+        const flatCheckins = Object.values(checkinsByProp).flat();
+        flatCheckins.sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+        setCheckins(flatCheckins);
+
+        // Outstanding balances — already an array
         setBalances(dashData.outstanding_balances || []);
-        setRevenue(dashData.revenue_by_property || []);
-        setActivity(actData.entries || actData.items || []);
+
+        // Compute stats from response data
+        const allCheckins30d = Object.values(dashData.upcoming_checkins_30d || {}).flat();
+        const outstandingTotal = (dashData.outstanding_balances || [])
+          .reduce((sum, r) => sum + parseFloat(r.balance || 0), 0);
+        const ytdTotal = (dashData.revenue_ytd || [])
+          .reduce((sum, r) => sum + parseFloat(r.revenue || 0), 0);
+        setStats({
+          upcoming_checkins: allCheckins30d.length,
+          outstanding_total: outstandingTotal,
+          ytd_revenue: ytdTotal,
+        });
+
+        // Merge revenue_mtd and revenue_ytd into a per-property array
+        const revByProp = {};
+        for (const r of (dashData.revenue_ytd || [])) {
+          revByProp[r.property_id] = { property_id: r.property_id, ytd: parseFloat(r.revenue || 0) };
+        }
+        for (const r of (dashData.revenue_mtd || [])) {
+          if (!revByProp[r.property_id]) {
+            revByProp[r.property_id] = { property_id: r.property_id, ytd: 0 };
+          }
+          revByProp[r.property_id].mtd = parseFloat(r.revenue || 0);
+        }
+        setRevenue(Object.values(revByProp));
+
+        setActivity(actData.entries || []);
       } catch (err) {
         console.error('Dashboard load error:', err);
       } finally {
@@ -64,16 +94,7 @@ export default function Dashboard() {
       <h1 className="text-2xl font-display font-bold text-timber">Dashboard</h1>
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Guests"
-          value={stats?.total_guests ?? 0}
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          }
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           label="Upcoming Check-ins"
           value={stats?.upcoming_checkins ?? 0}
@@ -129,11 +150,11 @@ export default function Dashboard() {
                           to={`/reservations/${r.id}`}
                           className="text-sm font-body text-creek hover:underline"
                         >
-                          {r.guest_name || `${r.first_name || ''} ${r.last_name || ''}`.trim() || '—'}
+                          {`${r.first_name || ''} ${r.last_name || ''}`.trim() || '—'}
                         </Link>
                       </td>
                       <td className="py-2 pr-3 text-sm font-body text-timber">
-                        {getPropertyLabel(r.property)}
+                        {getPropertyLabel(r.property_id)}
                       </td>
                       <td className="py-2 pr-3 text-sm font-body text-timber whitespace-nowrap">
                         {formatDateRange(r.check_in, r.check_out)}
@@ -176,11 +197,11 @@ export default function Dashboard() {
                           to={`/reservations/${r.id}`}
                           className="text-sm font-body text-creek hover:underline"
                         >
-                          {r.guest_name || '—'}
+                          {`${r.first_name || ''} ${r.last_name || ''}`.trim() || '—'}
                         </Link>
                       </td>
                       <td className="py-2 pr-3 text-sm font-body text-timber">
-                        {getPropertyLabel(r.property)}
+                        {getPropertyLabel(r.property_id)}
                       </td>
                       <td className="py-2 pr-3 text-sm font-body text-timber text-right">
                         {formatCurrency(r.total_amount)}
@@ -189,7 +210,7 @@ export default function Dashboard() {
                         {formatCurrency(r.amount_paid)}
                       </td>
                       <td className="py-2 text-sm font-body font-semibold text-ember text-right">
-                        {formatCurrency((r.total_amount || 0) - (r.amount_paid || 0))}
+                        {formatCurrency(r.balance)}
                       </td>
                     </tr>
                   ))}
@@ -213,13 +234,12 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-body text-timber">
-                      <span className="font-semibold">{a.entity_name || a.entity_type || 'Record'}</span>{' '}
+                      <span className="font-semibold">{a.entity_type || 'Record'}</span>{' '}
                       {a.action || 'modified'}
-                      {a.details ? ` — ${a.details}` : ''}
                     </p>
                     <p className="text-xs text-rawhide/60 font-body">
-                      {formatRelativeTime(a.created_at)}
-                      {a.performed_by ? ` by ${a.performed_by}` : ''}
+                      {formatRelativeTime(a.logged_at)}
+                      {a.user_email ? ` by ${a.user_email}` : ''}
                     </p>
                   </div>
                 </div>
@@ -239,10 +259,10 @@ export default function Dashboard() {
                 const maxRev = Math.max(...revenue.map((x) => x.ytd || 0), 1);
                 const pct = Math.round(((r.ytd || 0) / maxRev) * 100);
                 return (
-                  <div key={r.property}>
+                  <div key={r.property_id}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-body font-semibold text-timber">
-                        {getPropertyLabel(r.property)}
+                        {getPropertyLabel(r.property_id)}
                       </span>
                       <span className="text-sm font-body text-rawhide">
                         {formatCurrency(r.ytd || 0)} YTD

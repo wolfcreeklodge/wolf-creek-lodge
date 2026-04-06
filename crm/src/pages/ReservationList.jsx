@@ -15,7 +15,7 @@ export default function ReservationList() {
     for (const [key, val] of [...params.entries()]) {
       if (!val) params.delete(key);
     }
-    fetch(`/api/reservations?${params}`, { credentials: 'include' })
+    fetch(`/crm/api/reservations?${params}`, { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => {
         setReservations(data.reservations || []);

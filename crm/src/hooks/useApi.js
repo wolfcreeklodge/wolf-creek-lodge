@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+const BASE_PATH = '/crm';
 
 /**
  * Low-level fetch wrapper that auto-redirects on 401.
  */
 async function request(url, options = {}) {
-  const res = await fetch(url, {
+  const res = await fetch(BASE_PATH + url, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
@@ -14,7 +16,7 @@ async function request(url, options = {}) {
   });
 
   if (res.status === 401) {
-    window.location.href = '/login';
+    window.location.href = BASE_PATH + '/login';
     throw new Error('Unauthorized');
   }
 
@@ -55,13 +57,13 @@ export const api = {
     request(url, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (url) => request(url, { method: 'DELETE' }),
   upload: (url, formData) =>
-    fetch(url, {
+    fetch(BASE_PATH + url, {
       method: 'POST',
       credentials: 'include',
       body: formData,
     }).then(async (res) => {
       if (res.status === 401) {
-        window.location.href = '/login';
+        window.location.href = BASE_PATH + '/login';
         throw new Error('Unauthorized');
       }
       if (!res.ok) {
@@ -99,9 +101,9 @@ export function useApi(url, params) {
   );
 
   // Auto-fetch on mount / param change
-  useState(() => {
+  useEffect(() => {
     fetchData();
-  });
+  }, [fetchData]);
 
   return { ...state, refetch: fetchData };
 }

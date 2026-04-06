@@ -58,7 +58,7 @@ app.get('*', (req, res) => {
         <div style="text-align: center;">
           <h1>Wolf Creek Lodge CRM</h1>
           <p>Backend is running. Build the frontend with <code>npm run build</code>.</p>
-          <p><a href="/auth/me">Check auth status</a> | <a href="/api/dashboard">Dashboard API</a></p>
+          <p><a href="/crm/auth/me">Check auth status</a> | <a href="/crm/api/dashboard">Dashboard API</a></p>
         </div>
       </body></html>
     `);

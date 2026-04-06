@@ -59,7 +59,7 @@ export function setupAuth(app) {
   // Auth routes
   app.get('/auth/login', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/');
+      return res.redirect('/crm/');
     }
 
     const msalClient = getMsalClient();
@@ -81,7 +81,7 @@ export function setupAuth(app) {
 
   app.get('/auth/callback', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/');
+      return res.redirect('/crm/');
     }
 
     const msalClient = getMsalClient();
@@ -114,7 +114,7 @@ export function setupAuth(app) {
               <h1 style="color: #dc2626;">Access Denied</h1>
               <p>The email <strong>${email}</strong> is not authorized to access this CRM.</p>
               <p>Please contact the administrator if you believe this is an error.</p>
-              <a href="/auth/login" style="color: #2563eb;">Try a different account</a>
+              <a href="/crm/auth/login" style="color: #2563eb;">Try a different account</a>
             </div>
           </body>
           </html>
@@ -122,7 +122,7 @@ export function setupAuth(app) {
       }
 
       req.session.user = { email, name };
-      res.redirect('/');
+      res.redirect('/crm/');
     } catch (err) {
       console.error('Auth callback error:', err);
       res.status(500).json({ error: 'Authentication failed' });

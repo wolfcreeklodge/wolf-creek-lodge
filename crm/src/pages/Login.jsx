@@ -30,7 +30,7 @@ export default function Login({ user }) {
           </p>
 
           <a
-            href="/auth/login"
+            href="/crm/auth/login"
             className="inline-flex items-center justify-center gap-2 w-full bg-creek text-white hover:bg-pine rounded-lg px-4 py-3 font-body font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-creek focus:ring-offset-2"
           >
             {/* Microsoft icon */}

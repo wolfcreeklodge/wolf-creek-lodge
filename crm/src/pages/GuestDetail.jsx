@@ -8,7 +8,7 @@ export default function GuestDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/guests/${id}`, { credentials: 'include' })
+    fetch(`/crm/api/guests/${id}`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) throw new Error('Guest not found');
         return res.json();

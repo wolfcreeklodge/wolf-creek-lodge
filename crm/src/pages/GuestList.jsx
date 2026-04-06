@@ -9,9 +9,9 @@ import { formatCurrency, formatDate, getSourceColor } from '../utils/formatters'
 
 const PROPERTIES = [
   { value: '', label: 'All Properties' },
-  { value: 'house', label: 'The House' },
-  { value: 'apartment', label: 'The Apartment' },
-  { value: 'retreat', label: 'The Retreat' },
+  { value: 'wolf-creek-lodge', label: 'The House' },
+  { value: 'wolf-creek-apartment', label: 'The Apartment' },
+  { value: 'wolf-creek-retreat-combo', label: 'The Retreat' },
 ];
 
 const CHANNELS = [
