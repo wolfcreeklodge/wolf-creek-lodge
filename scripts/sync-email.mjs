@@ -15,7 +15,7 @@
  */
 
 import pg from "pg";
-import msal from "@azure/msal-node";
+import { ConfidentialClientApplication } from "@azure/msal-node";
 
 const { Pool } = pg;
 
@@ -128,7 +128,7 @@ async function acquireAccessToken(refreshToken) {
     },
   };
 
-  const cca = new msal.ConfidentialClientApplication(config);
+  const cca = new ConfidentialClientApplication(config);
 
   const result = await cca.acquireTokenByRefreshToken({
     refreshToken,
