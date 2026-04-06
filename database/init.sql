@@ -173,10 +173,10 @@ CREATE INDEX idx_activity_timestamp ON activity_log(logged_at DESC);
 CREATE TABLE sessions (
     sid     TEXT PRIMARY KEY,
     sess    JSONB NOT NULL,
-    expired TIMESTAMPTZ NOT NULL
+    expire  TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX idx_sessions_expired ON sessions(expired);
+CREATE INDEX idx_sessions_expire ON sessions(expire);
 
 -- ==========================================================================
 -- Seed: site configuration
