@@ -8,7 +8,7 @@ export default function ReservationDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`/crm/api/reservations/${id}`, { credentials: 'include' })
+    fetch(`/api/reservations/${id}`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) throw new Error('Reservation not found');
         return res.json();

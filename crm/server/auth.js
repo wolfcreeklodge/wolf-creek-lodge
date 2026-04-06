@@ -22,7 +22,7 @@ function getMsalClient() {
   });
 }
 
-const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/crm/auth/callback';
+const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/auth/callback';
 const ALLOWED_EMAILS = (process.env.CRM_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -56,10 +56,10 @@ export function setupAuth(app) {
     });
   }
 
-  // Auth routes (mounted at /crm/auth to match frontend base path)
-  app.get('/crm/auth/login', async (req, res) => {
+  // Auth routes
+  app.get('/auth/login', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/crm/');
+      return res.redirect('/');
     }
 
     const msalClient = getMsalClient();
@@ -79,9 +79,9 @@ export function setupAuth(app) {
     }
   });
 
-  app.get('/crm/auth/callback', async (req, res) => {
+  app.get('/auth/callback', async (req, res) => {
     if (DEV_BYPASS) {
-      return res.redirect('/crm/');
+      return res.redirect('/');
     }
 
     const msalClient = getMsalClient();
@@ -114,7 +114,7 @@ export function setupAuth(app) {
               <h1 style="color: #dc2626;">Access Denied</h1>
               <p>The email <strong>${email}</strong> is not authorized to access this CRM.</p>
               <p>Please contact the administrator if you believe this is an error.</p>
-              <a href="/crm/auth/login" style="color: #2563eb;">Try a different account</a>
+              <a href="/auth/login" style="color: #2563eb;">Try a different account</a>
             </div>
           </body>
           </html>
@@ -122,14 +122,14 @@ export function setupAuth(app) {
       }
 
       req.session.user = { email, name };
-      res.redirect('/crm/');
+      res.redirect('/');
     } catch (err) {
       console.error('Auth callback error:', err);
       res.status(500).json({ error: 'Authentication failed' });
     }
   });
 
-  app.post('/crm/auth/logout', (req, res) => {
+  app.post('/auth/logout', (req, res) => {
     req.session.destroy((err) => {
       if (err) {
         console.error('Logout error:', err);
@@ -140,7 +140,7 @@ export function setupAuth(app) {
     });
   });
 
-  app.get('/crm/auth/me', (req, res) => {
+  app.get('/auth/me', (req, res) => {
     if (req.session && req.session.user) {
       return res.json({ user: req.session.user });
     }
