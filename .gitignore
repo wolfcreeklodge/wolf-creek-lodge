@@ -6,3 +6,7 @@ dist/
 crm/data/
 *.db
 __pycache__/
+
+cloudflared/
+backups/
+
