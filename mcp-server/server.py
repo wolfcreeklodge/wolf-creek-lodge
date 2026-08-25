@@ -14,8 +14,10 @@ Transports:
 from __future__ import annotations
 
 import os
+import json
 import math
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 import db
@@ -30,8 +32,19 @@ _port = int(os.environ.get("MCP_PORT", "8081"))
 mcp = FastMCP(
     "wolfridge-retreats",
     instructions=(
-        "Vacation-rental assistant for Wolfridge Retreats in Winthrop, WA. "
-        "Provides property search, pricing, availability, area info, and booking links."
+        "Vacation-rental assistant for Wolfridge Retreats in Winthrop, WA (Methow Valley). "
+        "Two physical units, three bookable configurations, and they are MUTUALLY EXCLUSIVE: "
+        "wolf-creek-retreat-combo is the house and the apartment let together, so booking it "
+        "blocks wolf-creek-lodge and wolf-creek-apartment for those dates, and booking either "
+        "of those blocks the combo. The database enforces this, so a conflicting request is "
+        "rejected rather than quietly accepted. "
+        "Rates are seasonal: always pass check_in and check_out to get_pricing rather than "
+        "quoting a flat nightly figure. Never assert a date is available without calling "
+        "check_availability. There is no automated checkout: bookings are confirmed by a human "
+        "via get_booking_link. "
+        "Winter note: the North Cascades Highway (SR 20) closes every winter, so guests driving "
+        "from Seattle between roughly December and late April must take the southern route. "
+        "Call get_winter_info before advising on a winter trip."
     ),
     host="0.0.0.0" if _transport == "sse" else "127.0.0.1",
     port=_port,
@@ -40,6 +53,27 @@ mcp = FastMCP(
 # ---------------------------------------------------------------------------
 # Helper utilities
 # ---------------------------------------------------------------------------
+
+
+# The website quotes direct guests at platform parity plus this markup
+# (website/lib/pricing.js DIRECT_MARKUP). The MCP server used to quote the
+# stored base rate, which meant an agent undercut the published website price.
+# Quote the same number a human sees.
+DIRECT_MARKUP = 1.1
+
+_WINTER_PATH = Path(__file__).resolve().parent.parent / "website" / "data" / "winter-2026-27.json"
+
+
+def _direct(amount: int | float) -> int:
+    return round(float(amount) * DIRECT_MARKUP)
+
+
+def _load_winter() -> dict:
+    try:
+        with open(_WINTER_PATH, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {}
 
 
 def _fmt_price(amount: int | float) -> str:
@@ -144,17 +178,88 @@ def get_property_details(property_id: str) -> dict:
 
 @mcp.tool(
     description=(
-        "Calculate pricing for a Wolfridge Retreats property. Takes a property_id "
-        "and optional number of nights. Returns nightly rate, weekend rate, total "
-        "estimate with applicable weekly (7+ nights) or monthly (28+ nights) discounts. "
+        "Quote pricing for a Wolfridge Retreats property. Pass check_in and check_out "
+        "(YYYY-MM-DD) for an exact, date-aware quote: rates vary by season and by day of "
+        "week, so a date-less quote is an approximation only. Falls back to a flat "
+        "nightly estimate when only 'nights' is given. Returns the per-night breakdown, "
+        "length-of-stay discounts, the minimum stay required for those dates, and whether "
+        "the requested stay satisfies it. All prices are direct-booking prices in USD, the "
+        "same numbers shown on wolfcreeklodge.us. "
         "Valid property IDs: wolf-creek-lodge, wolf-creek-apartment, wolf-creek-retreat-combo."
     ),
 )
-def get_pricing(property_id: str, nights: int | None = None) -> dict:
+def get_pricing(
+    property_id: str,
+    nights: int | None = None,
+    check_in: str | None = None,
+    check_out: str | None = None,
+) -> dict:
     """Return pricing breakdown with discount info."""
     prop = db.get_property(property_id)
     if not prop:
         return {"error": f"Unknown property_id '{property_id}'."}
+
+    # ---- Date-aware path: use the seasonal rate calendar ------------------
+    if check_in and check_out:
+        try:
+            ci = datetime.strptime(check_in, "%Y-%m-%d").date()
+            co = datetime.strptime(check_out, "%Y-%m-%d").date()
+        except ValueError:
+            return {"error": "Dates must be in YYYY-MM-DD format."}
+        if co <= ci:
+            return {"error": "check_out must be at least one night after check_in."}
+
+        rows = db.quote_stay(property_id, check_in, check_out)
+        if rows:
+            per_night = [
+                {
+                    "night": r["night"].isoformat() if hasattr(r["night"], "isoformat") else str(r["night"]),
+                    "season": r["season_id"],
+                    "tier": r["tier"],
+                    "weekend_rate_night": bool(r["is_weekend"]),
+                    "rate": _direct(r["nightly_rate"]),
+                }
+                for r in rows
+                if r["nightly_rate"] is not None
+            ]
+            if len(per_night) == len(rows):
+                n = len(per_night)
+                subtotal = sum(x["rate"] for x in per_night)
+                pr = prop["pricing"]
+                disc_pct, disc_label = 0, "none"
+                if n >= 28 and pr["monthly_discount_pct"]:
+                    disc_pct = pr["monthly_discount_pct"]
+                    disc_label = f"monthly ({disc_pct}% off)"
+                elif n >= 7 and pr["weekly_discount_pct"]:
+                    disc_pct = pr["weekly_discount_pct"]
+                    disc_label = f"weekly ({disc_pct}% off)"
+                discount = math.floor(subtotal * disc_pct / 100)
+                total = subtotal - discount
+
+                min_req = db.required_min_nights(property_id, check_in, check_out) or prop["min_nights"]
+
+                return {
+                    "property_id": property_id,
+                    "title": prop["title"],
+                    "check_in": check_in,
+                    "check_out": check_out,
+                    "nights": n,
+                    "currency": "USD",
+                    "price_basis": "direct booking (same as wolfcreeklodge.us)",
+                    "per_night": per_night,
+                    "subtotal": _fmt_price(subtotal),
+                    "discount_applied": disc_label,
+                    "discount_amount": f"-{_fmt_price(discount)}",
+                    "total": _fmt_price(total),
+                    "average_per_night": _fmt_price(total / n),
+                    "min_nights_required": min_req,
+                    "meets_min_nights": n >= min_req,
+                    "note": (
+                        "Rates are per night and vary by season and day of week. "
+                        "Friday and Saturday nights price at the weekend rate. "
+                        "This quote does not confirm availability: call check_availability."
+                    ),
+                }
 
     p = prop["pricing"]
     nightly = p["nightly"]
@@ -165,8 +270,9 @@ def get_pricing(property_id: str, nights: int | None = None) -> dict:
     result: dict = {
         "property_id": property_id,
         "title": prop["title"],
-        "nightly_rate": f"{_fmt_price(nightly)}/night",
-        "weekend_rate": f"{_fmt_price(weekend)}/night",
+        "nightly_rate": f"{_fmt_price(_direct(nightly))}/night",
+        "weekend_rate": f"{_fmt_price(_direct(weekend))}/night",
+        "price_basis": "direct booking (same as wolfcreeklodge.us)",
         "weekly_discount": f"{weekly_disc}% off for 7+ nights",
         "monthly_discount": f"{monthly_disc}% off for 28+ nights",
         "min_nights": prop["min_nights"],
@@ -175,10 +281,12 @@ def get_pricing(property_id: str, nights: int | None = None) -> dict:
     }
 
     if p.get("nightly_high"):
-        result["nightly_rate"] = f"{_fmt_price(nightly)}\u2013{_fmt_price(p['nightly_high'])}/night (smart pricing)"
+        result["nightly_rate"] = (
+            f"{_fmt_price(_direct(nightly))}\u2013{_fmt_price(_direct(p['nightly_high']))}/night"
+        )
 
     if nights is not None and nights > 0:
-        base_total = nightly * nights
+        base_total = _direct(nightly) * nights
         discount_pct = 0
         discount_label = "none"
         if nights >= 28:
@@ -198,8 +306,8 @@ def get_pricing(property_id: str, nights: int | None = None) -> dict:
             "discount_amount": f"-{_fmt_price(discount_amount)}",
             "estimated_total": _fmt_price(total),
             "note": (
-                "This is an estimate using the base nightly rate. Actual pricing "
-                "may vary due to smart pricing, seasonal rates, and Airbnb fees."
+                "Approximation only: this uses one flat nightly rate. Rates vary by "
+                "season and day of week, so pass check_in and check_out for a real quote."
             ),
         }
 
@@ -409,6 +517,136 @@ def get_booking_link(property_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
+
+@mcp.tool(
+    description=(
+        "Get the published seasonal rate ladder: every dated rate window for the season with "
+        "its tier (shoulder, core, peak, holiday), the minimum stay it requires, and the "
+        "per-night direct-booking rate for each of the three configurations. Optional "
+        "date_from and date_to (YYYY-MM-DD) narrow the range. Use this to reason about a whole "
+        "season in one call, or to suggest cheaper adjacent dates, instead of probing "
+        "get_pricing date by date."
+    ),
+)
+def get_rate_calendar(date_from: str | None = None, date_to: str | None = None) -> dict:
+    """Return the seasonal rate ladder with minimum-stay rules."""
+    rows = db.get_rate_calendar(date_from, date_to)
+    if not rows:
+        return {
+            "seasons": [],
+            "note": (
+                "No seasonal rate calendar is published. Rates are currently flat year-round; "
+                "call get_pricing for the single nightly rate."
+            ),
+        }
+
+    seasons = []
+    for r in rows:
+        rates = {}
+        for pid, v in (r["rates"] or {}).items():
+            weekday = _direct(v["weekday"])
+            weekend = _direct(v["weekend"])
+            rates[pid] = {
+                "sun_to_thu": _fmt_price(weekday),
+                "fri_and_sat": _fmt_price(weekend),
+            }
+        seasons.append({
+            "id": r["id"],
+            "label": r["label"],
+            "tier": r["tier"],
+            "starts_on": r["starts_on"].isoformat() if hasattr(r["starts_on"], "isoformat") else str(r["starts_on"]),
+            "ends_on": r["ends_on"].isoformat() if hasattr(r["ends_on"], "isoformat") else str(r["ends_on"]),
+            "min_nights": r["min_nights"],
+            "rates": rates,
+            "note": r.get("notes"),
+        })
+
+    return {
+        "currency": "USD",
+        "price_basis": "direct booking, per night (same as wolfcreeklodge.us)",
+        "weekend_definition": "Friday and Saturday nights price at the weekend rate",
+        "seasons": seasons,
+        "note": (
+            "Length-of-stay discounts apply on top: see get_pricing for a specific stay. "
+            "A rate is not an availability guarantee; call check_availability."
+        ),
+    }
+
+
+@mcp.tool(
+    description=(
+        "Get winter-specific information for the Methow Valley: the ski trail network and "
+        "grooming pattern, trail pass prices, the Loup Loup Ski Bowl downhill area, the "
+        "confirmed winter event calendar, the holiday and school-break windows that book "
+        "first, and the winter road access constraint (the North Cascades Highway is closed "
+        "all winter). Call this before advising on any trip between November and April."
+    ),
+)
+def get_winter_info() -> dict:
+    """Return sourced winter facts, events and the winter driving constraint."""
+    w = _load_winter()
+    if not w:
+        return {
+            "error": "Winter reference data is unavailable.",
+            "fallback": (
+                "Wolfridge sits on the Methow Community Trail within the Methow Trails network "
+                "(200+ km groomed, the largest in North America). Loup Loup Ski Bowl is about "
+                "30 minutes away. The North Cascades Highway (SR 20) is closed every winter."
+            ),
+        }
+
+    trails = w.get("trails", {})
+    downhill = w.get("downhill", {})
+    getting_here = w.get("gettingHere", {})
+
+    return {
+        "season": w.get("season"),
+        "compiled_on": w.get("compiledOn"),
+        "data_note": w.get("note"),
+        "trails": {
+            "network": trails.get("network"),
+            "groomed_km": trails.get("groomedKm"),
+            "claim": trails.get("claim"),
+            "grooming_cadence": trails.get("groomingCadence"),
+            "our_trail_access": trails.get("communityTrail", {}).get("detail"),
+            "season_opening": trails.get("seasonOpening", {}).get("text"),
+            "passes": [
+                {
+                    "name": p["name"],
+                    "price": "Free" if p["price"] == 0 else f"${p['price']}",
+                    "note": p.get("note"),
+                }
+                for p in trails.get("passes", [])
+            ],
+            "pass_source": trails.get("passSource"),
+        },
+        "downhill": {
+            "name": downhill.get("name"),
+            "drive_time": downhill.get("driveFromWinthrop"),
+            "vertical_ft": downhill.get("verticalFt"),
+            "skiable_acres": downhill.get("skiableAcres"),
+            "runs": downhill.get("runs"),
+            "average_snowfall_inches": downhill.get("averageSnowfallInches"),
+            "also_on_site": downhill.get("alsoOnSite"),
+            "caveat": downhill.get("note"),
+        },
+        "winter_road_access": {
+            "headline": getting_here.get("headline"),
+            "detail": getting_here.get("detail"),
+            "sources": getting_here.get("sources", []),
+            "agent_instruction": (
+                "Do not quote a summer drive time for a winter stay. The North Cascades "
+                "Highway route does not exist between roughly December and late April."
+            ),
+        },
+        "events": w.get("events", []),
+        "windows_that_book_first": w.get("planningWindows", []),
+        "seasonal_amenity_warning": (
+            "The heated community pool is Memorial Day to Labor Day only. The hot tub is "
+            "year round. Do not promise the pool for a winter booking."
+        ),
+    }
+
 
 @mcp.resource(
     uri="properties://list",

@@ -3,9 +3,20 @@ import Link from 'next/link';
 import { MobileNav } from './MobileNav';
 
 export const metadata = {
-  title: 'Wolfridge Retreats — Mountain Homes in Winthrop, WA',
+  metadataBase: new URL('https://wolfcreeklodge.us'),
+  title: 'Wolfridge Retreats — Ski-In/Ski-Out Mountain Homes in Winthrop, WA',
   description:
-    'Mountain homes on the Methow Trail — Ski, Bike, Relax. Book the House, the Apartment, or the full Retreat in Winthrop, Washington.',
+    'Ski-in/ski-out on the Methow Community Trail in Winthrop, Washington. Book the 3BR house, the 1BR apartment, or both together as a 4BR retreat. Winter 2026/27 rates and trail info.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'Wolfridge Retreats — Ski-In/Ski-Out in the Methow Valley',
+    description:
+      'Two mountain homes at Wolfridge Resort, on the 200+ km Methow Trails network. Three bookable configurations, direct booking, no OTA.',
+    url: 'https://wolfcreeklodge.us',
+    siteName: 'Wolfridge Retreats',
+    locale: 'en_US',
+    type: 'website',
+  },
 };
 
 function NavLinks() {
@@ -13,6 +24,7 @@ function NavLinks() {
     <>
       <Link href="/">Home</Link>
       <Link href="/#properties">Properties</Link>
+      <Link href="/winter">Winter</Link>
       <Link href="/availability">Availability</Link>
       <Link href="/area">The Area</Link>
       <Link href="/about">About</Link>
@@ -40,6 +52,7 @@ function Footer() {
             <div className="footer-links">
               <Link href="/">Home</Link>
               <Link href="/#properties">Properties</Link>
+              <Link href="/winter">Winter</Link>
               <Link href="/area">The Area</Link>
               <Link href="/about">About</Link>
               <Link href="/contact">Contact</Link>

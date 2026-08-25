@@ -132,3 +132,83 @@ def _format_house_rules(rules: dict) -> dict:
         "check_in": check_in.get("start", "3:00 PM"),
         "check_out": rules.get("checkOut", "11:00 AM"),
     }
+
+
+# ---- Seasonal rate calendar -------------------------------------------------
+#
+# Added with database/03-rate-calendar.sql. Every function here degrades to
+# None or an empty list when the migration has not been applied, so the MCP
+# server keeps serving on an un-migrated database.
+
+
+def _rate_calendar_present() -> bool:
+    try:
+        row = fetch_one("SELECT to_regclass('public.property_rates') IS NOT NULL AS present")
+        return bool(row and row["present"])
+    except Exception:
+        return False
+
+
+def quote_stay(property_id: str, check_in: str, check_out: str) -> list[dict]:
+    """Per-night breakdown of base (platform parity) rates. Empty if no calendar."""
+    if not _rate_calendar_present():
+        return []
+    try:
+        return fetch_all(
+            """
+            SELECT night, season_id, tier, is_weekend, nightly_rate
+            FROM quote_stay(%s, %s::date, %s::date)
+            """,
+            (property_id, check_in, check_out),
+        )
+    except Exception:
+        return []
+
+
+def required_min_nights(property_id: str, check_in: str, check_out: str) -> int | None:
+    if not _rate_calendar_present():
+        return None
+    try:
+        row = fetch_one(
+            "SELECT required_min_nights(%s, %s::date, %s::date) AS n",
+            (property_id, check_in, check_out),
+        )
+        return int(row["n"]) if row and row["n"] is not None else None
+    except Exception:
+        return None
+
+
+def get_rate_calendar(date_from: str | None = None, date_to: str | None = None) -> list[dict]:
+    if not _rate_calendar_present():
+        return []
+    clauses, params = [], []
+    if date_from:
+        params.append(date_from)
+        clauses.append("s.ends_on >= %s::date")
+    if date_to:
+        params.append(date_to)
+        clauses.append("s.starts_on <= %s::date")
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    try:
+        return fetch_all(
+            f"""
+            SELECT s.id, s.label, s.tier, s.starts_on, s.ends_on,
+                   s.min_nights, s.notes,
+                   COALESCE(
+                     jsonb_object_agg(
+                       pr.property_id,
+                       jsonb_build_object('weekday', pr.weekday_rate,
+                                          'weekend', pr.weekend_rate)
+                     ) FILTER (WHERE pr.property_id IS NOT NULL),
+                     '{{}}'::jsonb
+                   ) AS rates
+            FROM rate_seasons s
+            LEFT JOIN property_rates pr ON pr.season_id = s.id
+            {where}
+            GROUP BY s.id
+            ORDER BY s.starts_on, s.priority DESC
+            """,
+            tuple(params),
+        )
+    except Exception:
+        return []

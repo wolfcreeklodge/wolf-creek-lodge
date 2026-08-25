@@ -2628,3 +2628,177 @@ h1, h2, h3, h4 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Winter 2026/27 additions
+   Appended as a self-contained block so it merges cleanly. Uses only the
+   existing design tokens, adds no new colours.
+   ========================================================================== */
+
+/* --- Confidence pills ----------------------------------------------------- */
+.pill--confirmed,
+.pill--provisional {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill--confirmed {
+  background: rgba(45, 74, 62, 0.1);
+  color: var(--color-pine);
+  border: 1px solid rgba(45, 74, 62, 0.2);
+}
+.pill--provisional {
+  background: rgba(166, 123, 91, 0.12);
+  color: var(--color-saddle);
+  border: 1px solid var(--color-glass-border);
+}
+
+/* --- Fact and rate tables ------------------------------------------------- */
+.fact-table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0 0.5rem;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: var(--color-snow);
+  box-shadow: var(--shadow-sm);
+}
+.fact-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+.fact-table th,
+.fact-table td {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-divider);
+  vertical-align: top;
+}
+.fact-table thead th {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-saddle);
+  background: rgba(242, 232, 217, 0.6);
+  white-space: nowrap;
+}
+.fact-table tbody tr:last-child td { border-bottom: none; }
+.fact-table .num { text-align: right; white-space: nowrap; }
+.fact-table thead th.num { text-align: right; }
+.fact-note {
+  color: var(--color-rawhide);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+.fact-table--rates td:first-child { min-width: 15rem; }
+.rate-row--holiday { background: rgba(199, 82, 42, 0.05); }
+.rate-row--peak { background: rgba(212, 163, 51, 0.05); }
+.rate-row--shoulder { color: var(--color-saddle); }
+
+.source-line {
+  font-size: 0.85rem;
+  color: var(--color-rawhide);
+  margin-top: 0.5rem;
+}
+.source-line a { color: var(--color-creek-dark); }
+
+/* --- Event cards ---------------------------------------------------------- */
+.event-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+.event-card {
+  background: var(--color-snow);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 1.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.event-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.event-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+.event-card-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--color-timber);
+}
+.event-dates {
+  font-size: 0.9rem;
+  color: var(--color-creek-dark);
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+.event-where { color: var(--color-rawhide); font-weight: 400; }
+.event-what { font-size: 0.95rem; margin: 0 0 0.9rem; }
+.event-source {
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-creek-dark);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+@media (max-width: 640px) {
+  .fact-table th, .fact-table td { padding: 0.55rem 0.7rem; font-size: 0.88rem; }
+  .event-card-head { flex-direction: column; }
+}
+
+/* --- Winter season band (homepage) --------------------------------------- */
+.winter-band {
+  background: linear-gradient(135deg, var(--color-pine) 0%, var(--color-creek-dark) 100%);
+  color: var(--color-snow);
+  padding: 3rem 0;
+}
+.winter-band-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+.winter-band .section-label { color: var(--color-wheat); }
+.winter-band h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.2;
+  margin: 0.3rem 0 0.7rem;
+  max-width: 34ch;
+}
+.winter-band p {
+  margin: 0;
+  max-width: 58ch;
+  color: rgba(250, 247, 242, 0.85);
+}
+.winter-band .btn--primary {
+  background: var(--color-snow);
+  color: var(--color-pine);
+  border-color: var(--color-snow);
+  flex-shrink: 0;
+}
+.winter-band .btn--primary:hover {
+  background: var(--color-wheat);
+  border-color: var(--color-wheat);
+  color: var(--color-timber);
+}
+@media (max-width: 820px) {
+  .winter-band-inner { flex-direction: column; align-items: flex-start; }
+}

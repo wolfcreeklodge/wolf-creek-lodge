@@ -9,12 +9,14 @@ import {
 import PhotoHero from './components/PhotoHero';
 import FullBleedImage from './components/FullBleedImage';
 import { GallerySection } from './components/PhotoGallery';
+import StructuredData from './components/StructuredData';
+import { getRateCalendar, toDisplayRate } from '../lib/pricing.js';
 
 export const dynamic = 'force-dynamic';
 
 function formatPrice(pricing) {
-  const min = Math.round(pricing.nightlyRate.min * 1.1);
-  const max = Math.round(pricing.nightlyRate.max * 1.1);
+  const min = toDisplayRate(pricing.nightlyRate.min);
+  const max = toDisplayRate(pricing.nightlyRate.max);
   if (min === max) return `$${min}`;
   return `$${min}–$${max}`;
 }
@@ -83,7 +85,11 @@ function PropertyCard({ listing, photo }) {
 }
 
 export default async function Home() {
-  const [siteConfig, listings] = await Promise.all([getSiteConfig(), getListings()]);
+  const [siteConfig, listings, calendar] = await Promise.all([
+    getSiteConfig(),
+    getListings(),
+    getRateCalendar({ from: '2026-10-15', to: '2027-04-30' }).catch(() => []),
+  ]);
   const retreat = listings.find((l) => l.id === 'wolf-creek-retreat-combo');
   const house = listings.find((l) => l.id === 'wolf-creek-lodge');
   const apartment = listings.find((l) => l.id === 'wolf-creek-apartment');
@@ -91,6 +97,8 @@ export default async function Home() {
 
   return (
     <>
+      <StructuredData siteConfig={siteConfig} listings={listings} calendar={calendar} />
+
       {/* Hero — full-width exterior photo */}
       <PhotoHero photo={heroPhoto}>
         <h1>
@@ -115,6 +123,24 @@ export default async function Home() {
           </Link>
         </div>
       </PhotoHero>
+
+      {/* Winter season band. Seasonal, swap or remove after the spring thaw. */}
+      <section className="winter-band">
+        <div className="container winter-band-inner">
+          <div>
+            <p className="section-label">Winter 2026/27</p>
+            <h2>The trail is groomed overnight. Your skis start at the door.</h2>
+            <p>
+              Wolf Ridge is a named trailhead on the Methow Community Trail, which is the spine of
+              a 200+ km network (the largest in North America). Trail pass prices, the 2026/27 event
+              calendar, and the one thing Seattle guests get wrong about the winter drive.
+            </p>
+          </div>
+          <Link href="/winter" className="btn btn--primary btn--large">
+            Plan a winter stay
+          </Link>
+        </div>
+      </section>
 
       {/* Featured Property — The Retreat */}
       <section id="properties" className="section">
@@ -155,7 +181,7 @@ export default async function Home() {
                 <div className="card-price">
                   {formatPrice(retreat.pricing)} <span>/ night</span>
                   {retreat.pricing.weekendRate && (
-                    <span> &middot; ${retreat.pricing.weekendRate} weekends</span>
+                    <span> &middot; ${toDisplayRate(retreat.pricing.weekendRate)} weekends</span>
                   )}
                 </div>
                 <StarRating rating={retreat.reviews.rating} count={retreat.reviews.count} />
@@ -293,38 +319,47 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Seasonal Activities Preview */}
+      {/* Seasonal Activities Preview. Winter leads while winter is the season. */}
       <section className="section section--alt">
         <div className="container">
           <p className="section-label">What To Do</p>
-          <h2 className="section-title">Every Season, An Adventure</h2>
+          <h2 className="section-title">Built For Winter, Good All Year</h2>
           <p className="section-subtitle">
-            The Methow Valley offers world-class outdoor recreation year-round.
+            The valley earns its reputation between December and March. The rest of the year is
+            the bonus.
           </p>
           <div className="property-grid">
             <div className="season-card season-card--winter">
               <div className="season-icon">&#10052;</div>
               <h3>Winter</h3>
               <ul>
-                <li>200km+ cross-country ski trails (ski-in/ski-out)</li>
-                <li>Downhill skiing nearby</li>
-                <li>Snowshoeing through the valley</li>
+                <li>Ski-in/ski-out on the Methow Community Trail, groomed overnight</li>
+                <li>200+ km of trails, the largest nordic network in North America</li>
+                <li>Loup Loup Ski Bowl for downhill, about 30 minutes away</li>
+                <li>Snowshoe and fat bike routes on the same network</li>
+                <li>Year-round hot tub for the end of the day</li>
               </ul>
+              <div className="mt-2">
+                <Link href="/winter" className="btn btn--secondary btn--small">
+                  Winter guide
+                </Link>
+              </div>
             </div>
             <div className="season-card season-card--summer">
               <div className="season-icon">&#9728;</div>
               <h3>Summer</h3>
               <ul>
-                <li>Mountain biking on Methow Valley Trails</li>
-                <li>Hiking and wildlife viewing</li>
-                <li>River access and seasonal pool</li>
+                <li>The same trails become a mountain bike network</li>
+                <li>Hiking and wildlife viewing in the North Cascades</li>
+                <li>Methow River access, a short walk away</li>
+                <li>Heated community pool, Memorial Day to Labor Day</li>
               </ul>
+              <div className="mt-2">
+                <Link href="/area" className="btn btn--secondary btn--small">
+                  The area
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="text-center mt-4">
-            <Link href="/area" className="btn btn--secondary">
-              Explore The Area
-            </Link>
           </div>
         </div>
       </section>

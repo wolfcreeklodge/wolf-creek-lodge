@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSiteConfig } from '../../lib/data.js';
+import winter from '../../data/winter-2026-27.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,11 @@ export default async function AreaPage() {
                   <strong>Fat biking</strong> — Groomed fat bike trails for winter cycling.
                 </li>
               </ul>
+              <div className="mt-2">
+                <Link href="/winter" className="btn btn--secondary btn--small">
+                  Winter guide, passes and events
+                </Link>
+              </div>
             </div>
 
             {/* Summer */}
@@ -121,6 +127,24 @@ export default async function AreaPage() {
                 </li>
               </ul>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Getting here. The winter route is not the summer route. */}
+      <section className="section">
+        <div className="container">
+          <p className="section-label">Getting here</p>
+          <h2 className="section-title">{winter.gettingHere.headline}</h2>
+          <div className="about-content">
+            <p>{winter.gettingHere.detail}</p>
+            <p className="source-line">
+              Closure and reopening dates from{' '}
+              <a href={winter.gettingHere.sources[0]} target="_blank" rel="noopener noreferrer">
+                WSDOT
+              </a>. In summer the North Cascades Highway is the short way in and one of the best
+              drives in the state. From roughly December to late April it is not an option at all.
+            </p>
           </div>
         </div>
       </section>
