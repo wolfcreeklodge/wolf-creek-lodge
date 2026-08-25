@@ -1,164 +1,182 @@
-# Wolf Creek Lodge — Project Context
+# Wolf Creek Lodge - project context
 
-## What This Is
+**Read `STATUS.md` first.** It is the live implementation state. This file is the stable stuff:
+host, stack, conventions, and the traps.
 
-An open-source, agent-driven vacation rental platform replacing Airbnb/VRBO. Two physical properties at Wolf Ridge Resort in Winthrop, WA, sold as three bookable SKUs.
+## What this is
+
+An open-source, agent-driven vacation rental platform replacing Airbnb/VRBO dependence. Two
+physical properties at Wolfridge Resort in Winthrop, WA, sold as three bookable SKUs.
 
 **Owner:** Bo Pintea (@bopintea)
+**Public brand:** Wolfridge Retreats
 **Domain:** https://wolfcreeklodge.us
 **MCP endpoint:** https://mcp.wolfcreeklodge.us/sse
 **Repo:** https://github.com/wolfcreeklodge/wolf-creek-lodge
-**Target launch:** May 2026
-**Revenue goal:** $45,000–$50,000/year net
+**Revenue goal:** $45,000 - $50,000/year net
 
-## Properties (Three SKUs)
+## Properties (three SKUs)
 
-| SKU | Bedrooms | Description |
-|-----|----------|-------------|
-| The House | 3 | Main house with full kitchen and mountain views |
-| The Apartment | 1 | Private suite above the garage |
-| The Retreat | 4 | Both units combined as a single booking |
+| SKU | id | Bedrooms | Sleeps |
+|-----|----|----------|--------|
+| The House | `wolf-creek-lodge` | 3 | 9 |
+| The Apartment | `wolf-creek-apartment` | 1 | 2 |
+| The Retreat | `wolf-creek-retreat-combo` | 4 | 10 |
 
-**Booking constraint:** These are mutually exclusive. Booking the House or Apartment blocks the Retreat for those dates, and vice versa. The system must enforce this in real time.
+**Booking constraint:** mutually exclusive. Booking the House or Apartment blocks the Retreat for
+those dates and vice versa. Enforced in the database by the `check_cross_property_overlap` trigger,
+not by application code. A conflicting insert raises, it does not silently succeed.
+
+This constraint is the single fact most likely to be got wrong by anything reading the data, and no
+vacation-rental schema can express it, so it is also written out in plain language in the JSON-LD
+descriptions, in `/llms.txt`, and in the MCP server instructions.
 
 ## Infrastructure
 
-- **Server:** Pintea-Ubuntu, on-premises at the property
-- **LAN IP:** 192.168.1.155 (static via DHCP reservation, MAC a4:ae:12:69:fe:77)
-- **Tailscale IP:** 100.65.136.20
-- **Docker:** 28.2.2 with NVIDIA T4 GPU (CUDA 13.0)
-- **OS:** Ubuntu with unattended-upgrades enabled
-- **Networking:** Cloudflare tunnel "wolfcreek" routes traffic to the server
-  - wolfcreeklodge.us → localhost:8080 (website)
-  - mcp.wolfcreeklodge.us → localhost:8081 (MCP server)
+- **Host:** ThinkPad X1 in Seattle. Windows + Docker Desktop. Repo at `C:\wolf-creek-lodge`.
+- **Not** on-premises at the property any more. The previous host (Pintea-Ubuntu, Ubuntu + NVIDIA
+  T4, physically at Wolfridge) died on 2026-05-26 from a kernel panic consistent with multi-bit RAM
+  failure. Its disk is still unrecovered. Anything in older docs about that machine, its LAN
+  address, or its GPU is historical.
+- **Cohabits Docker Desktop with the Gearbox stack** at `C:\gearbox`. They do not collide:
+  Gearbox owns 5432 / 8000 / 5173, this project owns 8080 / 8081 / 8082 and publishes no database
+  port at all. Compose project names are pinned in both (`wolf-creek-lodge`, `gearbox`) so a folder
+  rename cannot orphan a volume.
+- **Networking:** Cloudflare tunnel `wolfcreek` is the only path in. Every HTTP service binds
+  `127.0.0.1`, so Tailscale peers cannot reach them directly.
 
-### Cloudflare Tunnel Config
+### Cloudflare tunnel: dashboard-managed
 
-The tunnel config lives at `/etc/cloudflared/config.yml`. There is NO Nginx or Caddy reverse proxy. The dashboard alone is insufficient — the local config file must also be edited. More-specific hostnames go before less-specific ones. Restart with `sudo systemctl restart cloudflared` after edits.
+Routes live at one.dash.cloudflare.com -> Networks -> Tunnels -> wolfcreek -> Public Hostname.
+They are stored server-side and pushed to the agent at connection time, **overriding the local
+`cloudflared/config.yml`**. To change routing, edit the dashboard. The local file is documentation
+and backup only.
 
-## Running Services (Docker Compose)
+Routes must target the compose **service name** (`website:3000`, `mcp-server:8081`). Inside the
+cloudflared container, `localhost` is that container.
 
-| Container | Port | Image | Status |
-|-----------|------|-------|--------|
-| wcl-website | 8080 → 3000 | Next.js 14 | ✅ Running |
-| wcl-mcp-server | 8081 → 8081 | Python SSE | ✅ Running |
-| wcl-database | 5432 | PostgreSQL 16 Alpine | ✅ Running |
+Earlier revisions of this file claimed the local config was also required. That was wrong and the
+May migration disproved it.
 
-Start everything: `docker compose up -d --build website database mcp-server`
+## Tech stack
 
-The CRM container exists in docker-compose.yml but has a build error (missing `./pages/GuestDetail` import). Skip it for now.
-
-## Tech Stack
-
-- **Website:** Next.js 14 (App Router), React 18
-- **Database:** PostgreSQL 16
-- **MCP Server:** Python with SSE transport
-- **Containerization:** Docker + Docker Compose
-- **Styling:** Custom CSS with earth-tone design system (no Tailwind)
+- **Website:** Next.js 14 App Router, React 18, `output: standalone`
+- **Database:** PostgreSQL 16 Alpine
+- **MCP server:** Python, FastMCP, SSE transport
+- **Sync workers:** Node ESM scripts in `scripts/` (`sync-ical.mjs`, `sync-email.mjs`)
+- **Styling:** hand-written CSS with an earth-tone design system, no Tailwind
 - **Fonts:** Playfair Display (display), Source Sans 3 (body)
-- **Auth:** OAuth 2.0 (Google, Microsoft) — not yet implemented
+- **Auth:** Microsoft OAuth via `@azure/msal-node` + `iron-session`
 
-## Design System
+## Design system
 
-Methow Valley-inspired warm earth tones:
+Methow Valley warm earth tones, defined at the top of `website/app/globals.css`. Use the tokens,
+do not introduce new literals.
 
 ```css
---color-timber: #2C1810;    /* darkest brown */
---color-saddle: #5C3A21;    /* dark brown */
---color-rawhide: #A67B5B;   /* medium brown */
---color-wheat: #D4B896;     /* light tan */
---color-parchment: #F2E8D9; /* off-white warm */
---color-snow: #FAF7F2;      /* background */
---color-pine: #2D4A3E;      /* dark green */
---color-creek: #4A7C6F;     /* teal green */
---color-dusk: #8B4E6A;      /* plum accent */
---color-ember: #C7522A;     /* rust/orange */
---color-gold: #D4A333;      /* gold accent */
+--color-timber: #2C1810;    --color-pine: #2D4A3E;
+--color-saddle: #5C3A21;    --color-creek: #4A7C6F;
+--color-rawhide: #A67B5B;   --color-dusk: #8B4E6A;
+--color-wheat: #D4B896;     --color-ember: #C7522A;
+--color-parchment: #F2E8D9; --color-gold: #D4A333;
+--color-snow: #FAF7F2;
 ```
 
-## MCP Server Tools (7 tools)
+## Pricing model
 
-- `search_properties` — list available properties
-- `get_property_details` — details for a specific SKU
-- `get_pricing` — dynamic pricing for dates
-- `check_availability` — real-time availability check
-- `get_area_info` — Methow Valley activities and info
-- `get_host_info` — about the host
-- `get_booking_link` — direct booking URL
+Stored rates are **Airbnb parity**. The site quotes direct guests at parity plus `DIRECT_MARKUP`
+(10 percent), defined once in `website/lib/pricing.js`. Never reintroduce a bare `1.1` in a page
+component; that is how the Retreat weekend rate ended up advertised $105 below the model.
 
-## Website Routes
+Seasonal rates resolve through `rate_seasons` + `property_rates` with a deterministic precedence
+rule. Everything degrades to `properties.pricing` when the rate calendar is absent, so the site
+renders whether or not the migration has been applied. Both the site and the MCP server read
+through the same resolver, so a human and an agent always see the same number.
 
-- `/` — Home (featured Retreat + property cards)
-- `/listings/wolf-creek-retreat-combo` — 4BR Retreat detail
-- `/listings/wolf-creek-lodge` — 3BR House detail
-- `/listings/wolf-creek-apartment` — 1BR Apartment detail
-- `/area` — Methow Valley activities
-- `/about` — Host profile
-- `/contact` — Contact form
+## Architecture philosophy
 
-## Static Assets
+There is no frontend/backend split. The system is:
 
-The `website/public/` directory is currently empty (just `.gitkeep`). Images need to be added for property photos, hero banners, and gallery pages.
-
-## Git Workflow
-
-- Push from whichever machine has changes (server or Yoga laptop)
-- Server needs a GitHub Personal Access Token for pushing (no SSH keys set up)
-- The Yoga laptop (Windows, PowerShell) has git configured under user `bopintea`
-- Note: PowerShell `curl` is an alias for `Invoke-WebRequest` — use `curl.exe` for real curl behavior
-
-## Architecture Philosophy
-
-There is no traditional frontend/backend split. The system is:
 1. A single database (ground truth)
-2. A collection of specialized agents that read/write to the database
-3. A human-facing website (one interface to the data)
-4. An MCP endpoint (another interface, for AI agents)
+2. Specialized agents that read and write to it
+3. A human-facing website, which is one interface to the data
+4. An MCP endpoint, which is another interface, for agents
 
-## Planned Agents (not yet built)
+The website is not privileged over the MCP endpoint. If a fact is only reachable by parsing HTML,
+that is a bug.
 
-- **Guardian** — booking validation, rate limiting, abuse detection
-- **Pricing (Scout)** — dynamic pricing based on competitor supply/demand
-- **Manager** — orchestrates agents toward revenue target
-- **Finance** — tracks expenses, forecasts revenue
-- **Marketing Orchestrator** — monitors local news/events, assigns content campaigns
-- **Content Personalities:**
-  - The Wrangler (rodeo, Wild West, summer)
-  - The Trailblazer (hiking, biking, PCT, summer/fall)
-  - The Powder Hound (skiing, snowshoeing, winter)
-- **CRM** — guest intelligence, booking history, lead generation
-- **Documentation** — maintains docs, engages dev community
+## Conventions and traps
 
-## Marketing Strategy (priority order)
+- **ASCII only in generated source and SQL.** PowerShell `Set-Content` writes Windows-1252, so any
+  em dash or smart quote becomes an invalid UTF-8 byte and webpack's Rust-based SWC rejects the
+  file. If you must write from PowerShell:
+  `[System.IO.File]::WriteAllText($abs, $text, (New-Object System.Text.UTF8Encoding $false))`.
+  Note .NET file APIs ignore PowerShell's working directory, so pass absolute paths.
+- **`curl` in PowerShell is `Invoke-WebRequest`.** Use `curl.exe`.
+- **`core.autocrlf` is unset**, so `git status` reports 80-plus modified files that are pure line
+  endings. Use `git diff --ignore-all-space` to see real changes until this is fixed. Files
+  committed from 2026-08-25 onward are LF.
+- **This repo has a deny-list** at `.claude/settings.local.json`: `git clean`, `git restore`,
+  `git reset --hard`, `rm -rf`, and Docker volume destruction are denied. This is not bureaucracy.
+  `website/public` holds 519 MB of photos that exist nowhere else, `cloudflared/` holds the tunnel
+  credentials, and `.env` was reconstructed by hand; all three are untracked or gitignored inside
+  this working tree, so a single `git clean -fdx` ends the project. Branch-switching
+  `git checkout <branch>` is deliberately still allowed.
+- **Empty directories do not survive git.** Use `.gitkeep`.
+- **Docker multi-stage builds fail if COPY references a missing dir.** Use glob patterns, e.g.
+  `COPY --from=builder /app/public* ./public/`.
+- **One project per session.** Do not connect both this folder and `C:\gearbox` to the same agent
+  session. See `TWO-STACKS-OPERATING-GUIDE.md` in the Claude project.
 
-1. Programmatic SEO — targeted landing pages for "best X for Y" queries
-2. Answer engine optimization — structured content for AI-generated answers
-3. MCP server as distribution channel (already live)
-4. Free tool — e.g. Methow Valley trip planner
+## Common commands
+
+```powershell
+cd C:\wolf-creek-lodge
+
+# Bring up everything except the broken CRM
+docker compose up -d database website mcp-server ical-sync email-sync cloudflared
+
+docker compose ps
+docker compose logs --tail 30 <service>
+docker compose up -d --build website          # after a code change
+docker compose up -d --force-recreate website # after a .env change
+
+docker exec wcl-database psql -U wolfcreek -d wolfcreek
+docker exec wcl-database psql -U wolfcreek -d wolfcreek -c "\dt"
+
+# Apply a migration
+docker exec -i wcl-database psql -U wolfcreek -d wolfcreek < database\03-rate-calendar.sql
+
+# Protect the irreplaceable assets
+powershell -ExecutionPolicy Bypass -File .\backup-wcl-assets.ps1
+```
+
+## Git workflow
+
+Single machine now, so no cross-host push dance. `main` tracks
+`github.com/wolfcreeklodge/wolf-creek-lodge`; pushing needs a GitHub PAT, there are no SSH keys.
+The Gearbox repo has no remote at all, so there is no token to confuse between the two projects.
+
+## Planned agents (not built)
+
+Guardian (booking validation, rate limiting, abuse detection), Pricing/Scout (competitor
+supply-demand), Manager (orchestrates toward the revenue target), Finance, Marketing Orchestrator,
+and three content personalities: The Wrangler (rodeo, Wild West, summer), The Trailblazer (hiking,
+biking, summer/fall), The Powder Hound (skiing, winter). Plus CRM and Documentation agents.
+
+Blog infrastructure does not exist yet (no posts table, no `/blog` route), so the personality agents
+have nowhere to publish. `/winter` carries seasonal content in the meantime.
+
+## Marketing strategy, priority order
+
+1. Programmatic SEO, targeted landing pages for "best X for Y" queries
+2. Answer engine optimization, structured content for AI-generated answers
+3. The MCP server as a distribution channel (already live)
+4. A free tool, e.g. a Methow Valley trip planner
 5. Niche newsletter acquisition
-6. Content automation via personality agents
+6. Content automation via the personality agents
 7. Shareable output moments
-
-## Key Learnings / Gotchas
-
-- Cloudflare tunnel requires BOTH dashboard config AND `/etc/cloudflared/config.yml` edit
-- More-specific hostnames must come before less-specific in ingress rules
-- `service: http_status:404` is always the last catch-all rule
-- PowerShell `curl` ≠ real curl. Use `curl.exe` on Windows.
-- Empty directories don't survive git — use `.gitkeep`
-- Docker multi-stage builds fail if COPY references missing dirs — use glob patterns (e.g., `COPY --from=builder /app/public* ./public/`)
-- The server auto-restarts on power loss (BIOS: State After G3 = S0)
-
-## What's Next
-
-- Add property photos to the website
-- Build booking schema and availability calendar
-- Implement payment processing
-- Guest accounts with OAuth
-- Build the Guardian agent
-- iCal sync with Airbnb/VRBO for transition period
-- Programmatic SEO pages for the blog
 
 ## Full PRD
 
-See `wolf-creek-lodge-prd.md` in the project root for complete product requirements.
+`wolf-creek-lodge-prd.md` at the project root.
