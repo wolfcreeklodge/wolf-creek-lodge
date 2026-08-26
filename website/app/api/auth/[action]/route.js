@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getSession, getMsalClient, ALLOWED_EMAILS, REDIRECT_URI, DEV_BYPASS } from '../../../../lib/auth.js';
+import {
+  getSession, getMsalClient, ALLOWED_EMAILS, REDIRECT_URI, DEV_BYPASS,
+  isAllowedEmail, extractRefreshToken,
+} from '../../../../lib/auth.js';
 import pool from '../../../../lib/db.js';
 
 // Use the public origin for redirects, not the internal Docker hostname
@@ -60,7 +63,7 @@ export async function GET(request, { params }) {
       const email = (result.account?.username || result.idTokenClaims?.preferred_username || '').toLowerCase();
       const name = result.account?.name || result.idTokenClaims?.name || email;
 
-      if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(email)) {
+      if (!isAllowedEmail(email)) {
         return new Response(`Access denied for ${email}`, { status: 403 });
       }
 
@@ -68,8 +71,11 @@ export async function GET(request, { params }) {
       session.user = { email, name };
       await session.save();
 
-      // Persist Graph API tokens for email sync
+      // Persist Graph tokens so scripts/sync-email.mjs can run unattended.
+      // This admin sign-in is the practical way to seed them: its redirect URI
+      // is the one already registered on the app.
       if (result.accessToken) {
+        const refreshToken = extractRefreshToken(msalClient, result.account?.homeAccountId);
         try {
           await pool.query(`
             UPDATE email_sync_state SET
@@ -78,7 +84,13 @@ export async function GET(request, { params }) {
               token_expires_at = $3,
               updated_at = now()
             WHERE id = 1
-          `, [result.accessToken, result.refreshToken || null, result.expiresOn || null]);
+          `, [result.accessToken, refreshToken, result.expiresOn || null]);
+          console.log(
+            refreshToken
+              ? `Stored Graph access + refresh token for ${email}`
+              : `Stored Graph access token for ${email}, but no refresh token was in ` +
+                `the MSAL cache -- check that offline_access is a consented scope.`
+          );
         } catch (e) {
           console.error('Failed to store Graph API tokens:', e.message);
         }

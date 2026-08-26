@@ -143,7 +143,10 @@ export function setupAuth(app) {
       const name = result.account?.name || result.idTokenClaims?.name || email;
 
       // Check allowed emails
-      if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(email)) {
+      // Fail closed: an unset allowlist must mean nobody, not everybody. The app
+      // registration accepts personal Microsoft accounts, so with authority 'common'
+      // any Microsoft account at all can reach this callback.
+      if (ALLOWED_EMAILS.length === 0 || !ALLOWED_EMAILS.includes(email)) {
         return res.status(403).send(`
           <!DOCTYPE html>
           <html>
