@@ -83,6 +83,7 @@ export default async function ListingPage({ params }) {
     airbnbUrl,
     isComboListing,
     propertyDetails,
+    spatial,
   } = listing;
 
   const photos = getListingPhotos(id);
@@ -180,6 +181,55 @@ Thanks!`
           <h2 className="listing-section-title">About This Place</h2>
           <p className="listing-description">{description}</p>
         </section>
+
+        {/* The space. Photographs flatten volume, so state the numbers. */}
+        {spatial?.sizeSqFt && (
+          <section className="listing-section">
+            <h2 className="listing-section-title">The Space</h2>
+            <div className="space-figures">
+              <div className="space-figure">
+                <span className="space-figure__value">
+                  {spatial.sizeApproximate ? '~' : ''}{spatial.sizeSqFt.toLocaleString()}
+                </span>
+                <span className="space-figure__label">sq ft total</span>
+              </div>
+              {spatial.mainRoomSqFt && (
+                <div className="space-figure">
+                  <span className="space-figure__value">{spatial.mainRoomSqFt}</span>
+                  <span className="space-figure__label">sq ft main room</span>
+                </div>
+              )}
+              {spatial.ceiling?.maxFt && (
+                <div className="space-figure">
+                  <span className="space-figure__value">{spatial.ceiling.maxFt}&prime;</span>
+                  <span className="space-figure__label">ceiling at its highest</span>
+                </div>
+              )}
+            </div>
+
+            {spatial.ceiling?.label && (
+              <p className="listing-description">
+                Ceilings run {spatial.ceiling.label}
+                {spatial.structure ? `. ${spatial.structure}` : '.'}
+              </p>
+            )}
+
+            {Array.isArray(spatial.rooms) && spatial.rooms.length > 0 && (
+              <ul className="room-areas">
+                {spatial.rooms.map((r, i) => (
+                  <li key={i}>
+                    <span>{r.name}</span>
+                    <span className="room-areas__sqft">{r.sqFt} sq ft</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {spatial.sizeSource && (
+              <p className="space-source">{spatial.sizeSource}</p>
+            )}
+          </section>
+        )}
 
         {/* Highlights */}
         {highlights && highlights.length > 0 && (

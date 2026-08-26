@@ -52,6 +52,11 @@ export async function GET() {
     lines.push(
       `- ${l.id}: ${l.title}. Sleeps ${l.capacity.maxGuests}, ` +
         `${l.capacity.bedrooms} bed / ${l.capacity.bathrooms} bath.` +
+        (l.spatial?.sizeSqFt
+          ? ` ${l.spatial.sizeApproximate ? 'About ' : ''}${l.spatial.sizeSqFt.toLocaleString()} sq ft` +
+            (l.spatial.mainRoomSqFt ? `, with a ${l.spatial.mainRoomSqFt} sq ft main room` : '') +
+            (l.spatial.ceiling?.label ? ` and ceilings ${l.spatial.ceiling.label}` : '') + '.'
+          : '') +
         (l.isComboListing ? ' COMBINED LISTING.' : '')
     );
   }

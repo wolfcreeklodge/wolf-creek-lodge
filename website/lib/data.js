@@ -38,6 +38,7 @@ function rowToListing(row) {
       yearBuilt: row.year_built,
       propertySizeSqFt: row.property_size_sqft,
     },
+    spatial: row.spatial || {},
     capacity: {
       maxGuests: row.max_guests,
       bedrooms: row.bedrooms,
