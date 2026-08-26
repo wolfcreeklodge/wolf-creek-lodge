@@ -133,8 +133,8 @@ that is a bug.
 ```powershell
 cd C:\wolf-creek-lodge
 
-# Bring up everything except the broken CRM
-docker compose up -d database website mcp-server ical-sync email-sync cloudflared
+# Bring up the whole stack (crm builds and runs again as of 2026-08-25)
+docker compose up -d
 
 docker compose ps
 docker compose logs --tail 30 <service>

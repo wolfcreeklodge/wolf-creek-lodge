@@ -71,16 +71,15 @@ server add `DIRECT_MARKUP` (10 percent) on render. Superhost, 4.93 average acros
 
 ## Services running
 
-All via `docker-compose.yml` at project root. Bring up with
-`docker compose up -d database website mcp-server ical-sync email-sync cloudflared`
-(note `crm` is excluded, see Known broken).
+All via `docker-compose.yml` at project root. `docker compose up -d` brings up everything;
+`crm` no longer needs excluding.
 
 | Container | Build | Host binding | Notes |
 |---|---|---|---|
 | `wcl-database` | `postgres:16-alpine` | expose 5432 only | volume `pgdata` -> `wolf-creek-lodge_pgdata` |
 | `wcl-website` | `./website` | `127.0.0.1:8080` -> 3000 | Next.js 14 App Router, `output: standalone` |
 | `wcl-mcp-server` | `./mcp-server` | `127.0.0.1:8081` | Python FastMCP, SSE transport, serves at `/sse` only |
-| `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | **BROKEN BUILD**, do not start |
+| `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | Express + Vite SPA. Builds and runs. Local only, no tunnel route. |
 | `wcl-ical-sync` | `./scripts` (`sync-ical.mjs`) | none | pulls Airbnb iCal into `reservations` |
 | `wcl-email-sync` | `./scripts` (`Dockerfile.email-sync`) | none | Microsoft Graph -> `emails` |
 | `wcl-cloudflared` | `cloudflare/cloudflared:latest` | none | mounts `./cloudflared` read-only |
@@ -147,6 +146,46 @@ All pages carry a schema.org `@graph`: `LodgingBusiness` + three `VacationRental
 seasonal `Offer` nodes each (live now that `03`/`04` are applied) and `eligibleQuantity` minimum stay. The
 three-SKU exclusion constraint is written out in plain language in every node description, because
 no vacation-rental schema can express it.
+
+---
+
+## CRM and email sync
+
+The CRM was recorded as a broken build. It is not, and probably has not been for a while --
+`docker compose build crm` succeeds and the container serves. The real fault was in the login
+path, and it had two parts, both fixed 2026-08-25.
+
+**1. The refresh token was never stored.** `crm/server/auth.js` read `result.refreshToken` off the
+MSAL `AuthenticationResult`. MSAL deliberately does not put it there -- that property is always
+`undefined`, because refresh tokens are meant to stay inside its token cache. So every login wrote
+`access_token` and left `refresh_token` null, which is exactly the state the database was found
+in (`has_access = t, has_refresh = f`), and `scripts/sync-email.mjs` logged "No refresh token
+found in email_sync_state" forever. It now reads the token out of
+`getTokenCache().serialize()`, which is the supported route, and logs a loud warning if the cache
+has no refresh token (which would mean `offline_access` was not consented).
+
+**2. The session cookie could never be set.** `cookie.secure` was keyed off `NODE_ENV`, so in
+production it was always `true`. A secure cookie is not stored by the browser over plain HTTP, and
+this CRM is reached over `http://localhost:8082` now that the `crm.wolfcreeklodge.us` route is
+gone -- so the session vanished between the OAuth callback and the next request. It now follows the
+scheme of `MICROSOFT_REDIRECT_URI`.
+
+Also changed: `MICROSOFT_REDIRECT_URI` is now set explicitly in `.env`
+(`http://localhost:8082/auth/callback`); the compose default no longer points at the deleted
+`crm.wolfcreeklodge.us` hostname; and `DEV_BYPASS_AUTH` now defaults to `false` in compose
+rather than `true`, because a CRM that silently runs with no auth if `.env` goes missing is a
+bad default.
+
+Verified: the authorize URL carries the right `redirect_uri` and includes `offline_access`, and
+Microsoft returns a normal sign-in page rather than `AADSTS50011`, so that redirect URI is
+registered on the app registration.
+
+**Still needs a human.** Open http://localhost:8082 at the machine and sign in as the mailbox
+owner. That one login stores the refresh token and email sync starts working. The one thing that
+cannot be checked without doing it: the authority is the single tenant
+`354288e4-df4f-4b7a-8e6e-22473b93857d`, while the mailbox is `wolfcreeklodge@outlook.com`, a
+consumer account. If sign-in is refused, the app registration needs to accept personal Microsoft
+accounts and `MICROSOFT_TENANT_ID` should become `common`.
 
 ---
 
@@ -227,9 +266,9 @@ Server instructions now state the exclusion constraint and the winter road const
 
 ## Known broken / stubbed
 
-1. **`wcl-crm` does not build.** Missing `./pages/GuestDetail` import. Either restore the file
-   (it may be on the Pintea-Ubuntu disk) or remove the reference. Its Cloudflare route is deleted
-   until it builds.
+1. **~~`wcl-crm` does not build~~ -- fixed 2026-08-25.** The recorded diagnosis (missing
+   `./pages/GuestDetail` import) was stale: `src/pages/GuestDetail.jsx` is present and the image
+   builds clean. What was actually broken was the login path. See "CRM and email sync" below.
 2. **The photo layer is stubs.** `website/lib/photos.js`, `PhotoHero.js`, `PhotoGallery.js`,
    `FullBleedImage.js` are tracked as of 2026-08-25 so `main` builds, but they are stubs written on
    migration day. Real versions are on the dead disk. Dimensions are still placeholders (every photo
@@ -312,7 +351,10 @@ Server instructions now state the exclusion constraint and the winter road const
 4. **Rotate the two exposed secrets.** `MICROSOFT_CLIENT_SECRET` and `ANTHROPIC_API_KEY` were
    pasted through a chat as a Parsec-clipboard workaround on migration day and have not been
    rotated. `MIGRATION-NOTES.md` has the exact steps.
-5. **Fix `wcl-crm`**, then re-add its Cloudflare route.
+5. **Log into the CRM once**, at http://localhost:8082, as the mailbox owner. That single action
+   writes the Graph refresh token and unblocks email sync. Do **not** re-add the Cloudflare route:
+   this is an admin tool with the owner's mailbox attached, and it is better reached over
+   localhost at the machine than published. See "CRM and email sync".
 6. **Fix the CRLF situation.** `core.autocrlf` is unset, so the working tree is CRLF while the
    blobs are LF and `git status` reports 80-plus modified files with ~17,000 phantom line changes.
    With `--ignore-all-space` there are none left. A `.gitattributes` with `* text=auto eol=lf`

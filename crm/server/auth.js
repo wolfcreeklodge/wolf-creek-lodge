@@ -22,10 +22,45 @@ function getMsalClient() {
   });
 }
 
-const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/auth/callback';
+const REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:8082/auth/callback';
+
+// ---------------------------------------------------------------------------
+// MSAL deliberately does NOT expose refresh tokens on the AuthenticationResult:
+// result.refreshToken is always undefined. The old code read it anyway, so
+// email_sync_state.refresh_token was never populated and scripts/sync-email.mjs
+// sat there logging "No refresh token found" forever, while access_token was
+// written successfully -- which is exactly the state the database was found in.
+//
+// The supported way to reach it is the token cache, which serialize() exposes
+// as { RefreshToken: { <key>: { secret, home_account_id, ... } } }. The cache is
+// per client instance and getMsalClient() makes a fresh one per request, so the
+// only entry present is the one just acquired.
+// ---------------------------------------------------------------------------
+function extractRefreshToken(msalClient, homeAccountId) {
+  try {
+    const cache = JSON.parse(msalClient.getTokenCache().serialize());
+    const entries = Object.values(cache.RefreshToken || {});
+    if (entries.length === 0) return null;
+    const match = homeAccountId
+      ? entries.find((e) => e.home_account_id === homeAccountId)
+      : null;
+    return (match || entries[0]).secret || null;
+  } catch (err) {
+    console.error('Could not read refresh token from MSAL cache:', err.message);
+    return null;
+  }
+}
 const ALLOWED_EMAILS = (process.env.CRM_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
-const IS_DEV = process.env.NODE_ENV !== 'production';
+
+// A "secure" cookie is never sent over plain HTTP. Keying this off NODE_ENV
+// meant that running production behind http://localhost (which is how this
+// admin-only CRM is reached now that the crm.wolfcreeklodge.us tunnel route is
+// gone) set a cookie the browser silently refused to store, so the session was
+// lost between the OAuth callback and the next request and login just looped.
+// Follow the redirect URI's scheme instead, which is the thing that actually
+// determines whether the browser will keep it.
+const USE_SECURE_COOKIE = (process.env.MICROSOFT_REDIRECT_URI || '').startsWith('https://');
 
 export function setupAuth(app) {
   // Trust proxy (Cloudflare terminates SSL, forwards HTTP)
@@ -43,7 +78,7 @@ export function setupAuth(app) {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: !IS_DEV,
+      secure: USE_SECURE_COOKIE,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
@@ -126,8 +161,12 @@ export function setupAuth(app) {
 
       req.session.user = { email, name };
 
-      // Persist Graph API tokens for email sync (if mailbox owner logs in)
+      // Persist Graph API tokens so scripts/sync-email.mjs can run unattended.
       if (result.accessToken) {
+        const refreshToken = extractRefreshToken(
+          msalClient,
+          result.account?.homeAccountId
+        );
         try {
           await pool.query(`
             UPDATE email_sync_state SET
@@ -138,10 +177,19 @@ export function setupAuth(app) {
             WHERE id = 1
           `, [
             result.accessToken,
-            result.refreshToken || null,
+            refreshToken,
             result.expiresOn || null,
           ]);
-          console.log(`Stored Graph API tokens for ${email}`);
+          if (refreshToken) {
+            console.log(`Stored Graph access + refresh token for ${email}`);
+          } else {
+            console.warn(
+              `Stored Graph access token for ${email}, but NO refresh token was ` +
+              `in the MSAL cache. Email sync will stop working when this access ` +
+              `token expires. Check that 'offline_access' is in the consented ` +
+              `scopes for this app registration.`
+            );
+          }
         } catch (tokenErr) {
           console.error('Failed to store Graph API tokens:', tokenErr.message);
         }
