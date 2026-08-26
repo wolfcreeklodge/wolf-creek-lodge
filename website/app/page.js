@@ -4,7 +4,7 @@ import { getSiteConfig, getListings } from '../lib/data.js';
 import {
   heroPhoto, nightPhoto, entrancePhoto,
   greatRoomPhotos, diningKitchenPhotos, bedroomPhotos, libraryPhotos,
-  groundsPhotos, warmingHutPhotos, PROPERTY_AERIAL,
+  groundsPhotos, warmingHutPhotos, PROPERTY_AERIAL, apartmentHero,
 } from '../lib/photos.js';
 import PhotoHero from './components/PhotoHero';
 import FullBleedImage from './components/FullBleedImage';
@@ -219,7 +219,7 @@ export default async function Home() {
           </p>
           <div className="property-grid">
             <PropertyCard listing={house} photo={diningKitchenPhotos[0]} />
-            <PropertyCard listing={apartment} photo={libraryPhotos[1]} />
+            <PropertyCard listing={apartment} photo={apartmentHero} />
           </div>
         </div>
       </section>

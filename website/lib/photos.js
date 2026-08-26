@@ -48,21 +48,26 @@ export const warmingHutPhotos = [
   photo('/images/warming-hut/stone-fireplace.jpg', 'Stone fireplace in the warming hut'),
 ];
 
+// bedroom-nook.jpg and workspace.jpg were dropped 2026-08-26: both were dark,
+// near-identical close-ups of a monitor on a desk and were the weakest images on
+// the listing. The files remain on disk, just unreferenced. Replacements come
+// from 'Winthrop House/Apartment Photos for website'.
 export const apartmentPhotos = [
-  photo('/images/apartment/living-room.jpg', 'Apartment living room'),
-  photo('/images/apartment/kitchen.jpg', 'Apartment kitchen'),
-  photo('/images/apartment/bedroom.jpg', 'Apartment bedroom'),
-  photo('/images/apartment/bedroom-nook.jpg', 'Apartment bedroom nook'),
-  photo('/images/apartment/workspace.jpg', 'Apartment workspace'),
+  photo('/images/apartment/living-dining.jpg', 'The apartment living and dining area, with the whitewashed shiplap partition and vaulted pine ceiling', 2000, 1500),
+  photo('/images/apartment/living-room.jpg', 'Apartment living room, with bookshelves and windows onto the valley'),
+  photo('/images/apartment/kitchen.jpg', 'Apartment kitchen, with patterned tile backsplash and full-size appliances'),
+  photo('/images/apartment/bedroom.jpg', 'Apartment bedroom, with a queen bed against the terracotta accent wall'),
+  photo('/images/apartment/bathroom.jpg', 'Apartment bathroom, with a walk-in shower and a window onto the trees', 2000, 1500),
+  photo('/images/apartment/entry.jpg', 'The apartment entry, under the cedar-slat wall of the covered walkway', 2000, 1500),
   photo('/images/apartment/deck-panoramic.jpg', 'Panoramic view from the apartment deck'),
-  photo('/images/apartment/deck-winter.jpg', 'Apartment deck in winter'),
+  photo('/images/apartment/deck-winter.jpg', 'The apartment deck in winter, looking out over snow to the ridge'),
   photo('/images/apartment/exterior.jpg', 'Apartment exterior'),
 ];
 
 // Replaced 2026-08-25: the previous file was not the apartment. Source is
 // IMG_6496.jpg from 'Winthrop House/Apartment Photos for website'; the camera
 // original sits beside it as hero-living-area-original.jpg.
-const apartmentHero = photo(
+export const apartmentHero = photo(
   '/images/apartment/hero-living-area.jpg',
   'The apartment living area: a round dining table and upholstered chairs beside a whitewashed shiplap partition, with a black futon, bookshelves and a window seat beyond',
   2560,
