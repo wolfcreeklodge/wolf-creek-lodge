@@ -52,6 +52,22 @@ export const warmingHutPhotos = [
 // near-identical close-ups of a monitor on a desk and were the weakest images on
 // the listing. The files remain on disk, just unreferenced. Replacements come
 // from 'Winthrop House/Apartment Photos for website'.
+// The building seen from the meadow. Added 2026-08-26: the site had plenty of
+// interiors but almost nothing showing the house and the garage/apartment block
+// together, or the west-facing window wall that the great room is built around.
+export const exteriorPhotos = [
+  photo(
+    '/images/exterior/house-garage-from-field.jpg',
+    'The house seen from the meadow: the long single-storey wing with its west-facing window wall on the right, and the two-storey garage and apartment block on the left, backed by ponderosa pines',
+    2560, 1920
+  ),
+  photo(
+    '/images/exterior/west-window-wall.jpg',
+    'The west elevation close up: a wall of tall windows under a deep cedar-framed overhang, with the covered patio and dining table alongside',
+    2560, 1920
+  ),
+];
+
 export const apartmentPhotos = [
   photo('/images/apartment/living-dining.jpg', 'The apartment living and dining area, with the whitewashed shiplap partition and vaulted pine ceiling', 2000, 1500),
   photo('/images/apartment/living-room.jpg', 'Apartment living room, with bookshelves and windows onto the valley'),
@@ -77,8 +93,9 @@ const comboHero = photo('/images/hero/exterior-daytime.jpg', 'Both units at Wolf
 
 const LISTING_PHOTOS = {
   'wolf-creek-lodge': {
-    hero: heroPhoto,
+    hero: exteriorPhotos[0],
     gallery: [
+      ...exteriorPhotos,
       ...greatRoomPhotos,
       ...diningKitchenPhotos,
       ...bedroomPhotos,
@@ -94,6 +111,7 @@ const LISTING_PHOTOS = {
   'wolf-creek-retreat-combo': {
     hero: comboHero,
     gallery: [
+      ...exteriorPhotos,
       ...greatRoomPhotos,
       ...bedroomPhotos,
       ...apartmentPhotos.slice(0, 4),
