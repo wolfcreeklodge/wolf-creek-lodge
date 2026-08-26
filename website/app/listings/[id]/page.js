@@ -3,6 +3,7 @@ import { getListing, getSiteConfig } from '../../../lib/data.js';
 import { toDisplayRate } from '../../../lib/pricing.js';
 import { getListingPhotos } from '../../../lib/photos.js';
 import PhotoHero from '../../components/PhotoHero';
+import { HouseFloorPlan, ApartmentFloorPlan } from '../../components/FloorPlan';
 import { PhotoStrip } from '../../components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
@@ -223,6 +224,13 @@ Thanks!`
                   </li>
                 ))}
               </ul>
+            )}
+
+            {(id === 'wolf-creek-lodge' || id === 'wolf-creek-retreat-combo') && (
+              <HouseFloorPlan />
+            )}
+            {(id === 'wolf-creek-apartment' || id === 'wolf-creek-retreat-combo') && (
+              <ApartmentFloorPlan />
             )}
 
             {spatial.sizeSource && (

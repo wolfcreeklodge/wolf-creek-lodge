@@ -3151,3 +3151,80 @@ h1, h2, h3, h4 {
   color: var(--color-rawhide);
   max-width: 620px;
 }
+
+/* -- Simplified floor plans -------------------------- */
+
+.floorplan {
+  margin: 1.5rem 0 0;
+  max-width: 760px;
+}
+
+.floorplan__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.fp-room rect {
+  fill: rgba(212, 184, 150, 0.16);
+  stroke: var(--color-saddle);
+  stroke-width: 2.5;
+}
+
+.fp-room--feature rect {
+  fill: rgba(74, 124, 111, 0.16);
+  stroke: var(--color-pine);
+  stroke-width: 3.5;
+}
+
+.fp-outdoor rect {
+  fill: none;
+  stroke: var(--color-rawhide);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+}
+
+.fp-name {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--color-timber);
+}
+
+.fp-outdoor .fp-name {
+  font-weight: 400;
+  fill: var(--color-rawhide);
+}
+
+.fp-sqft {
+  font-size: 13px;
+  font-weight: 400;
+  fill: var(--color-saddle);
+}
+
+/* The window wall: the whole point of the drawing. */
+.fp-glass line {
+  stroke: var(--color-creek);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.fp-note {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--color-creek);
+}
+
+.fp-scale {
+  font-family: var(--font-body);
+  font-size: 13px;
+  fill: var(--color-rawhide);
+}
+
+@media (max-width: 640px) {
+  .fp-name { font-size: 19px; }
+  .fp-sqft { font-size: 17px; }
+  .fp-note, .fp-scale { font-size: 18px; }
+}
