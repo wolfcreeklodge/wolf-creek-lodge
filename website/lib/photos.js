@@ -108,15 +108,22 @@ export function getListingPhotos(listingId) {
 // ARRIVAL_MAP is NOT public. It is the annotated final-approach route and is
 // only rendered on /arrival/{token}, behind a per-reservation token. Do not
 // reference it from any indexed page.
+//
+// Both files here are web derivatives, resized 2026-08-25 from originals that
+// were 17.4 MB and 11.7 MB. The camera/screenshot originals sit beside them as
+// *-original.* and are never served. Regenerate derivatives from those, not
+// from these, so quality does not compound.
 // ---------------------------------------------------------------------------
 export const PROPERTY_AERIAL = photo(
   '/images/aerial/property-overview.jpg',
   'Aerial view over the Methow Valley in spring: the Methow River winding through cottonwood and pine, open meadow beyond it, and the snow-capped North Cascades on the horizon. The house is the red-roofed building in the meadow right of centre.',
-  2000,
-  1333
+  2560,
+  1705
 );
 
 export const ARRIVAL_MAP = photo(
-  '/images/arrival/directions-map.png',
-  'Satellite map of the final approach: the route in red along Wolf Creek Road and Lucky Louie Road to the house, with turns to avoid marked X'
+  '/images/arrival/directions-map.webp',
+  'Satellite map of the final approach: the route in red along Wolf Creek Road and Lucky Louie Road to the house, with turns to avoid marked X',
+  2048,
+  1450
 );

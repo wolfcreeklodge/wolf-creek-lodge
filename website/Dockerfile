@@ -20,6 +20,12 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public* ./public/
 
+# next/image writes optimized variants to .next/cache at runtime. Everything
+# above is copied in as root, so without this the nextjs user gets
+# "EACCES: mkdir '/app/.next/cache'" on every optimized image and re-encodes
+# the source on each request.
+RUN mkdir -p /app/.next/cache/images && chown -R nextjs:nodejs /app/.next/cache
+
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]

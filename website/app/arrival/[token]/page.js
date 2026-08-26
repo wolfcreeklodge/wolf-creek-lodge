@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getSiteConfig } from '../../../lib/data.js';
 import { getReservationByArrivalToken } from '../../../lib/arrival.js';
@@ -84,14 +85,15 @@ export default async function ArrivalPage({ params }) {
           <li>The house is at the end of Lucky Louie Road, circled in red on the map.</li>
         </ol>
 
-        {/* Plain img: this is an annotated screenshot, and its intrinsic size is
-            not recorded in lib/photos.js the way the room photos are. */}
         <figure className="arrival-figure">
-          <img
+          <Image
             src={ARRIVAL_MAP.src}
             alt={ARRIVAL_MAP.alt}
+            width={ARRIVAL_MAP.width}
+            height={ARRIVAL_MAP.height}
             className="arrival-map"
-            loading="eager"
+            sizes="(max-width: 820px) 100vw, 820px"
+            priority
           />
           <figcaption>
             Red is your route. Black <span className="arrival-x">X</span> marks are turns to skip.
@@ -123,10 +125,13 @@ export default async function ArrivalPage({ params }) {
         </div>
 
         <figure className="arrival-figure">
-          <img
+          <Image
             src={PROPERTY_AERIAL.src}
             alt={PROPERTY_AERIAL.alt}
+            width={PROPERTY_AERIAL.width}
+            height={PROPERTY_AERIAL.height}
             className="arrival-aerial"
+            sizes="(max-width: 820px) 100vw, 820px"
             loading="lazy"
           />
           <figcaption>
