@@ -54,17 +54,21 @@ async function ensureTables() {
     VALUES (1)
     ON CONFLICT (id) DO NOTHING;
 
+    -- Must stay identical to database/02-email-sync.sql, which is the
+    -- authoritative definition and is applied from docker-entrypoint-initdb.d.
+    -- This copy only fires against an empty database.
     CREATE TABLE IF NOT EXISTS emails (
-      id              BIGSERIAL PRIMARY KEY,
-      graph_id        TEXT NOT NULL UNIQUE,
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      graph_id        TEXT UNIQUE NOT NULL,
       subject         TEXT,
-      from_address    TEXT,
-      to_address      TEXT,
-      direction       TEXT NOT NULL CHECK (direction IN ('inbound','outbound')),
+      from_address    TEXT NOT NULL,
+      from_name       TEXT,
+      to_addresses    JSONB DEFAULT '[]',
       received_at     TIMESTAMPTZ NOT NULL,
-      body_preview    TEXT,
+      snippet         TEXT,
       has_attachments BOOLEAN DEFAULT FALSE,
-      is_read         BOOLEAN DEFAULT FALSE,
+      is_read         BOOLEAN DEFAULT TRUE,
+      direction       TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
       outlook_url     TEXT,
       guest_id        UUID REFERENCES guests(id),
       reservation_id  UUID REFERENCES reservations(id),
@@ -281,8 +285,11 @@ async function matchReservation(client, guestId, receivedDate) {
 async function processMessage(client, msg) {
   const graphId = msg.id;
   const fromAddr = msg.from?.emailAddress?.address?.toLowerCase() || null;
-  const toAddr =
-    msg.toRecipients?.[0]?.emailAddress?.address?.toLowerCase() || null;
+  const toAddrs = (msg.toRecipients || [])
+    .map((r) => r?.emailAddress?.address?.toLowerCase())
+    .filter(Boolean);
+  const toAddr = toAddrs[0] || null;
+  const fromName = msg.from?.emailAddress?.name || null;
 
   // Determine direction
   const direction =
@@ -306,17 +313,18 @@ async function processMessage(client, msg) {
   // Insert with dedup
   const result = await client.query(
     `INSERT INTO emails
-       (graph_id, subject, from_address, to_address, direction,
-        received_at, body_preview, has_attachments, is_read,
+       (graph_id, subject, from_address, from_name, to_addresses, direction,
+        received_at, snippet, has_attachments, is_read,
         outlook_url, guest_id, reservation_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13)
      ON CONFLICT (graph_id) DO NOTHING
      RETURNING id`,
     [
       graphId,
       msg.subject || null,
       fromAddr,
-      toAddr,
+      fromName,
+      JSON.stringify(toAddrs),
       direction,
       msg.receivedDateTime || new Date().toISOString(),
       msg.bodyPreview || null,

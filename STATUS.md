@@ -180,12 +180,30 @@ Verified: the authorize URL carries the right `redirect_uri` and includes `offli
 Microsoft returns a normal sign-in page rather than `AADSTS50011`, so that redirect URI is
 registered on the app registration.
 
-**Still needs a human.** Open http://localhost:8082 at the machine and sign in as the mailbox
-owner. That one login stores the refresh token and email sync starts working. The one thing that
-cannot be checked without doing it: the authority is the single tenant
-`354288e4-df4f-4b7a-8e6e-22473b93857d`, while the mailbox is `wolfcreeklodge@outlook.com`, a
-consumer account. If sign-in is refused, the app registration needs to accept personal Microsoft
-accounts and `MICROSOFT_TENANT_ID` should become `common`.
+**Resolved 2026-08-25. Email sync is live: 200 messages, Jun 1 to Aug 26.** Getting there turned
+up three more faults after the two above:
+
+1. **Wrong authority.** The app registration is "Any Entra ID Tenant + Personal Microsoft
+   accounts", but `MICROSOFT_TENANT_ID` was the tenant GUID. A personal Microsoft account cannot
+   authenticate against a single-tenant authority. Now `common`. Every code path already
+   defaulted to that; the GUID was the anomaly.
+2. **`docker compose restart` does not reload `.env`.** email-sync kept the old tenant GUID
+   through three restarts while website and crm had `common`, so it kept minting an
+   organizational token (`iss: sts.windows.net`, `tid: 354288e4...`) that Graph rejected with
+   401 for a consumer mailbox. `--force-recreate` is required, as `CLAUDE.md` already says.
+3. **`scripts/sync-email.mjs` carried its own stale schema.** Its `ensureTables()` and INSERT
+   used `to_address TEXT` and `body_preview`, while `database/02-email-sync.sql` -- the
+   authoritative definition, applied at init -- has `to_addresses JSONB`, `snippet` and
+   `from_name`. The INSERT now matches, keeps every recipient rather than the first, and
+   populates `from_name`. The duplicated CREATE TABLE is now identical to the migration.
+
+The token was seeded by signing in at **https://wolfcreeklodge.us/availability**, not the CRM --
+that redirect URI was already registered on the app, so it needed no Azure change.
+`http://localhost:8082/auth/callback` has since been registered too, so the CRM UI is reachable.
+
+Two things worth knowing about the sync: `delta_link` is still null, so each run does a full
+200-message fetch rather than an incremental one (`ON CONFLICT (graph_id) DO NOTHING` makes that
+harmless but wasteful), and nothing ever writes `last_sync_at`.
 
 ---
 
@@ -296,9 +314,10 @@ Server instructions now state the exclusion constraint and the winter road const
    - **iCal sync does nothing:** no property has `ical_import_url` set (the column is
      `ical_import_url`, not `airbnb_ical_url`). `reservations` is empty and `ical_sync_log`
      has zero rows, so availability shown anywhere is not real.
-   - **Email sync is still unauthorized:** "No refresh token found in email_sync_state". It wants a
-     login through the CRM, and the CRM does not build, so this is a deadlock. Breaking it means
-     fixing the CRM or seeding the refresh token another way.
+   - **~~Email sync is still unauthorized~~ -- working as of 2026-08-25.** 200 messages synced,
+     Jun 1 to Aug 26. Seeded by signing in at `/availability` on the website, not the CRM. See
+     "CRM and email sync". `guest_id` is null on all 200 because `guests` is empty; matching
+     will start working once real bookings exist.
 
 7. **`sharp` is missing from the website image.** Next.js standalone logs "sharp is required ...
    for image optimization" plus `EACCES: mkdir '/app/.next/cache'` on every optimized image.
@@ -351,10 +370,9 @@ Server instructions now state the exclusion constraint and the winter road const
 4. **Rotate the two exposed secrets.** `MICROSOFT_CLIENT_SECRET` and `ANTHROPIC_API_KEY` were
    pasted through a chat as a Parsec-clipboard workaround on migration day and have not been
    rotated. `MIGRATION-NOTES.md` has the exact steps.
-5. **Log into the CRM once**, at http://localhost:8082, as the mailbox owner. That single action
-   writes the Graph refresh token and unblocks email sync. Do **not** re-add the Cloudflare route:
-   this is an admin tool with the owner's mailbox attached, and it is better reached over
-   localhost at the machine than published. See "CRM and email sync".
+5. **~~Log into the CRM~~ -- done 2026-08-25, email sync is live.** Do **not** re-add the
+   Cloudflare route for the CRM: it is an admin tool with the owner's mailbox attached, and is
+   better reached over localhost at the machine than published.
 6. **Fix the CRLF situation.** `core.autocrlf` is unset, so the working tree is CRLF while the
    blobs are LF and `git status` reports 80-plus modified files with ~17,000 phantom line changes.
    With `--ignore-all-space` there are none left. A `.gitattributes` with `* text=auto eol=lf`
