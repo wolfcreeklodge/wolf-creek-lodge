@@ -1,6 +1,21 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-08-25, later session (**Winter 2026/27 is live and the site is off Airbnb.**)
+**Last updated:** 2026-08-26 (**Auth, email sync and the CRM all work; the CRM is published.**)
+
+Since the 2026-08-25 entry below: Microsoft sign-in was fixed on both surfaces and email sync now
+runs (200 messages). The CRM turned out never to have been a broken build -- its login path was
+broken instead -- and it is now published at `crm.wolfcreeklodge.us` on the owner's call,
+reversing the earlier localhost-only recommendation. The database gained its first real guests and
+reservations. The apartment's cover photo and gallery were wrong or weak and have been replaced.
+The website image pipeline was fixed (`sharp` installed, `.next/cache` made writable), which
+took the home page hero from 17.4 MB to 61 KB on a phone.
+
+One defect knowingly left open: the arrival directions map is publicly fetchable, which defeats the
+token gate on `/arrival/{token}`. See Known broken 3.
+
+---
+
+**Prior entry (2026-08-25, later):** (**Winter 2026/27 is live and the site is off Airbnb.**)
 
 Three things changed and are deployed:
 
@@ -217,6 +232,9 @@ unguessable URL per reservation, using the same pattern as `properties.ical_expo
 - **Revocation:** setting a reservation to `cancelled` or `no_show` makes the page 404 with no
   extra step. To revoke without cancelling, rotate the token (statement at the bottom of
   `database/05-arrival-tokens.sql`).
+- **The map itself is NOT gated.** See Known broken 3. The token protects the page; the image is a
+  static file under `public/` and is fetchable by anyone who guesses the path. Known and
+  deliberately left open as of 2026-08-26.
 - **Crawler defence, three layers:** the page sends `robots: noindex, nofollow, nocache`;
   `/arrival/` is `Disallow`ed in `app/robots.js`; and it is not in the sitemap. It also sends
   `referrer: no-referrer` so tapping the Google Maps button does not leak the token onward.
@@ -231,6 +249,44 @@ unguessable URL per reservation, using the same pattern as `properties.ical_expo
 
 Verified 2026-08-25 against a temporary reservation, since removed: valid token 200, unknown token
 404, cancelled reservation 404.
+
+---
+
+## CRM data
+
+The database held no guests and no reservations until 2026-08-26. It now carries a small real
+history, part entered by hand and part reconstructed from the synced mailbox.
+
+- **8 guests.** Four supplied by the owner with full contact details; three recovered from Vrbo
+  notification subjects (name only -- Vrbo does not put email or phone in them); one pre-existing
+  record from the May rebuild.
+- **7 reservations**, all `wolf-creek-apartment`, all `booking_channel = 'vrbo'`. Five
+  `completed` totalling 17 nights across June to August 2026, and two `cancelled`.
+- **13 of 200 emails linked to a guest.**
+
+Three findings worth keeping:
+
+1. **Two bookings that looked live were cancelled.** One of the four guests originally described
+   as a past stay had in fact cancelled four days before arrival, and a Sep 5-7 booking that
+   looked upcoming was cancelled on 2026-08-04. Both are stored as `cancelled` so they do not
+   count toward occupancy. Check for a "Booking canceled" mail before trusting any reservation
+   subject.
+2. **Address matching cannot work for OTA mail.** 125 of the 200 messages come from `airbnb.com`
+   and about 60 more from Vrbo/HomeAway domains, all of which anonymise the guest address.
+   `matchGuest()` in `sync-email.mjs` compares addresses only, so it linked nothing. The 13 links
+   were made by matching "<first> <last>" against the subject instead. This resolves itself as
+   direct booking grows, since those guests mail the mailbox directly.
+3. **No prices anywhere in the mailbox.** Verified against Graph: reservation bodies carry no
+   amounts, Vrbo deposit statements carry none, and the six Airbnb payout mails put a figure in
+   the *subject* but are host payouts -- net of fees, dated when money moved, not attributable to
+   a named guest. All 7 reservations therefore have `total_amount = 0`. Revenue has to come from
+   the Vrbo and Airbnb dashboards.
+
+Still outside the system: roughly **16 Airbnb stays** are identifiable from subjects by property
+and dates (5 apartment, 4 house, 7 Retreat, July through the Christmas corridor). Airbnb
+reservation subjects name the *property*, not the guest, so they cannot be attributed, and Airbnb
+withholds guest email and phone. That set has to be harvested from the Airbnb dashboard and
+entered through the CRM.
 
 ---
 
@@ -289,22 +345,21 @@ Server instructions now state the exclusion constraint and the winter road const
    builds clean. What was actually broken was the login path. See "CRM and email sync" below.
 2. **The photo layer is stubs.** `website/lib/photos.js`, `PhotoHero.js`, `PhotoGallery.js`,
    `FullBleedImage.js` are tracked as of 2026-08-25 so `main` builds, but they are stubs written on
-   migration day. Real versions are on the dead disk. Dimensions are still placeholders (every photo
-   declared 1920x1080); alt text is now written per photo.
+   migration day. Real versions are on the dead disk. Most photos still declare a placeholder
+   1920x1080; the ones added or replaced on 2026-08-25/26 (the aerial, the arrival map, the
+   apartment hero, bathroom, entry and living-dining) carry real measured dimensions. Alt text is
+   written per photo.
    `getListingPhotos()` returned a bare `[]` while `listings/[id]/page.js` reads `photos.hero`
    and `photos.gallery.length`, so all three listing pages threw and returned 500. Fixed
    2026-08-25: it returns `{ hero, gallery }` per SKU and wires up the previously unreferenced
    `public/images/apartment/` set.
-3. **The two orientation images are not on disk yet.** The code references them and the
-   directories exist, but the files were supplied in a chat session and have to be saved by hand:
-   - `website/public/images/arrival/directions-map.png` -- the annotated final-approach map.
-     **Private**, only rendered on `/arrival/{token}`.
-   - `website/public/images/aerial/property-overview.jpg` -- the annotated aerial. **Public**,
-     rendered on `/area`.
-
-   Both render through a plain `<img>` rather than `next/image`, because their intrinsic
-   dimensions are unknown and `lib/photos.js` would otherwise carry guessed numbers. Worth
-   switching to `next/image` once the files are in place and measured.
+3. **The arrival map is not actually private.** `/arrival/{token}` gates the *page*, but the
+   map itself is a static file under `website/public/`, so
+   `https://wolfcreeklodge.us/images/arrival/directions-map.webp` returns 200 to anyone who
+   guesses the path, token or no token. The 12 MB `-original.png` beside it is exposed the same
+   way. This defeats the point of the token gate. Deliberately left open 2026-08-26; the fix is to
+   move both files out of `public/` into a directory the server does not publish, stream them
+   through a token-checked route, and add that directory to the Dockerfile copy.
 
 4. **~58 photos missing.** 142 of roughly 200 recovered. Find the gaps empirically: load the site
    with DevTools open, filter Network by status 404, and note the filenames the code expects.
