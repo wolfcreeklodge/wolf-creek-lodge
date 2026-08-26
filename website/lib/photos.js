@@ -59,7 +59,15 @@ export const apartmentPhotos = [
   photo('/images/apartment/exterior.jpg', 'Apartment exterior'),
 ];
 
-const apartmentHero = photo('/images/apartment/hero-living-area.jpg', 'Apartment living area');
+// Replaced 2026-08-25: the previous file was not the apartment. Source is
+// IMG_6496.jpg from 'Winthrop House/Apartment Photos for website'; the camera
+// original sits beside it as hero-living-area-original.jpg.
+const apartmentHero = photo(
+  '/images/apartment/hero-living-area.jpg',
+  'The apartment living area: a round dining table and upholstered chairs beside a whitewashed shiplap partition, with a black futon, bookshelves and a window seat beyond',
+  2560,
+  1920
+);
 const comboHero = photo('/images/hero/exterior-daytime.jpg', 'Both units at Wolfridge Retreats');
 
 const LISTING_PHOTOS = {
