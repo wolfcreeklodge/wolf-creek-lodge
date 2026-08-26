@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getSiteConfig } from '../../lib/data.js';
 import winter from '../../data/winter-2026-27.json';
+import { areaPhotos } from '../../lib/photos.js';
+import { GallerySection } from '../components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +23,20 @@ export default async function AreaPage() {
           Discover the Methow Valley — one of the Pacific Northwest&#39;s most stunning destinations
           for outdoor adventure, wellness, and year-round recreation.
         </p>
+      </section>
+
+      {/* Out in the valley. Creek is the resident pointer and comes along. */}
+      <section className="section">
+        <div className="container">
+          <p className="section-label">Out the Door</p>
+          <h2 className="section-title">The Valley, and Creek</h2>
+          <p className="section-subtitle">
+            Creek is our German shorthaired pointer and the unofficial head of guest relations.
+            He knows the river bluffs and the ridge trails better than anyone, and he is happy
+            to show you both.
+          </p>
+          <GallerySection photos={areaPhotos} />
+        </div>
       </section>
 
       {/* Intro */}

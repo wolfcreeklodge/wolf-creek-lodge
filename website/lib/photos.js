@@ -17,6 +17,9 @@ export const greatRoomPhotos = [
   photo('/images/great-room/fireplace-wall.jpg', 'Great room fireplace wall'),
   photo('/images/great-room/living-room-windows.jpg', 'Living room windows'),
   photo('/images/great-room/panoramic-view.jpg', 'Panoramic valley view from the great room'),
+  photo('/images/great-room/piano.jpg',
+    'An antique carved upright piano in the great room, below a station clock, beside a window onto the meadow',
+    2000, 3556),
 ];
 
 export const diningKitchenPhotos = [
@@ -24,11 +27,19 @@ export const diningKitchenPhotos = [
   photo('/images/dining-kitchen/kitchen.jpg', 'Kitchen'),
 ];
 
+// Replaced 2026-08-26 with the April 2026 shoot. The previous four were
+// recovered from the truncated migration tarball and were the weakest interiors
+// on the site. The old files remain on disk, unreferenced.
 export const bedroomPhotos = [
-  photo('/images/bedrooms/bunk-room.jpg', 'Bunk room'),
-  photo('/images/bedrooms/guest-winter-view.jpg', 'Guest bedroom with winter view'),
-  photo('/images/bedrooms/iron-frame-bed.jpg', 'Bedroom with iron frame bed'),
-  photo('/images/bedrooms/master-suite.jpg', 'Master suite'),
+  photo('/images/bedrooms/master-bedroom.jpg',
+    'The master bedroom: a live-edge timber headboard and sage quilt, with clerestory windows above and a shoji screen onto the valley',
+    2000, 2667),
+  photo('/images/bedrooms/guest-bedroom.jpg',
+    'The guest bedroom: a black iron bedstead against a warm terracotta wall, with a window onto the meadow and the ridge beyond',
+    2000, 2667),
+  photo('/images/bedrooms/bunk-room-loft.jpg',
+    'The bunk room: a suspended timber loft bunk reached by a custom ladder, with a reading corner beneath',
+    2000, 2667),
 ];
 
 export const libraryPhotos = [
@@ -52,6 +63,24 @@ export const warmingHutPhotos = [
 // near-identical close-ups of a monitor on a desk and were the weakest images on
 // the listing. The files remain on disk, just unreferenced. Replacements come
 // from 'Winthrop House/Apartment Photos for website'.
+// The valley, and Creek, the resident German shorthaired pointer. These are what
+// guests actually do here: the river, the bluffs above it, and the peaks at the
+// head of the valley. Added 2026-08-26; /area had carried no photographs at all.
+export const areaPhotos = [
+  photo('/images/area/creek-river-bluff.jpg',
+    'Creek, a German shorthaired pointer, standing on a bluff above a bend in the Methow River with the valley opening out beyond',
+    2000, 1125),
+  photo('/images/area/creek-overlook.jpg',
+    'Creek sitting at the edge of the bluff, looking out over the river to the dry hills and distant snow',
+    2000, 2667),
+  photo('/images/area/methow-peaks.jpg',
+    'Snow-covered peaks at the head of the valley, seen through standing timber from a ridge trail',
+    2000, 2667),
+  photo('/images/area/valley-from-ridge.jpg',
+    'The forested valley floor and the river far below, framed by pines from high on a ridge',
+    2000, 2667),
+];
+
 // The building seen from the meadow. Added 2026-08-26: the site had plenty of
 // interiors but almost nothing showing the house and the garage/apartment block
 // together, or the west-facing window wall that the great room is built around.
