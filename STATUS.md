@@ -1,11 +1,26 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-08-25 (**Winter 2026/27 shipped to the repo.** Seasonal rate-calendar
-schema, a sourced winter guide at `/winter`, and a real agent surface (JSON-LD, `/llms.txt`,
-two new MCP tools, date-aware `get_pricing`). The proposed winter rate ladder is committed but
-**deliberately not applied** to the database, pending a decision on rate level. Same-day repo
-hygiene: the May migration topology is finally committed, the photo stubs are tracked so `main`
-builds from a clean clone, and this repo now carries its own destructive-command deny-list.)
+**Last updated:** 2026-08-25, later session (**Winter 2026/27 is live and the site is off Airbnb.**)
+
+Three things changed and are deployed:
+
+1. **The 2026-08-25 work was never actually deployed.** Both images dated from 2026-05-26, so
+   `/winter`, `/llms.txt`, `/robots.txt` and `/sitemap.xml` were 404 in production and the live
+   MCP `get_pricing` was still quoting stored parity rates, undercutting the published direct
+   price by 10 percent. Rebuilt; all of it now serves.
+2. **The winter rate ladder is applied.** `03` and `04` both ran. 11 seasons, 33 rate rows,
+   applied as written on the owner's call. See the Database schema section.
+3. **The site now books by email.** Airbnb is a fallback link, not a parallel call to action.
+   See "Booking messaging" below.
+
+Also fixed: all three `/listings/[id]` pages were returning 500 (`getListingPhotos` shape bug),
+and `mcp-server/requirements.txt` gained an upper bound after a rebuild pulled mcp 2.x and
+crash-looped the server.
+
+**Prior entry (2026-08-25, earlier):** Winter 2026/27 shipped to the repo -- seasonal rate-calendar
+schema, a sourced winter guide at `/winter`, and a real agent surface (JSON-LD, `/llms.txt`, two
+new MCP tools, date-aware `get_pricing`). Repo hygiene: the May migration topology committed, the
+photo stubs tracked so `main` builds from a clean clone, and a destructive-command deny-list.
 
 **Prior entry (2026-05-26):** stack rebuilt on the ThinkPad X1 after Pintea-Ubuntu suffered a
 hardware failure mid-migration. All containers running, Cloudflare routing restored. Fresh empty
@@ -46,8 +61,11 @@ Two physical units, three configurations, mutually exclusive and enforced by dat
 | `wolf-creek-apartment` | 1BR apartment | 2 | 1 | 1 | $275 / $308 weekend |
 | `wolf-creek-retreat-combo` | 4BR both together | 10 | 12 | 3 | $1,045 / $1,160 weekend |
 
-Rates are flat year-round today. Stored rates are Airbnb parity; the site adds `DIRECT_MARKUP`
-(10 percent) on render. Superhost, 4.93 average across 46 reviews.
+The range above is the flat fallback in `properties.pricing`, which is what the listing pages show
+as a headline. **Actual per-night pricing is seasonal** as of 2026-08-25: a dated stay resolves
+through `rate_seasons` + `property_rates` and can run from $549 base on a shoulder night to
+$1,095 base in the Christmas corridor. Stored rates are Airbnb parity; both the site and the MCP
+server add `DIRECT_MARKUP` (10 percent) on render. Superhost, 4.93 average across 46 reviews.
 
 ---
 
@@ -91,11 +109,13 @@ Applied automatically on first compose-up via `/docker-entrypoint-initdb.d/`:
 |---|---|---|
 | `database/init.sql` | `site_config`, `properties`, `guests`, `reservations`, `payments`, `activity_log`, `ical_sync_log`, `sessions` + the overlap and cross-property exclusivity triggers | yes |
 | `database/02-email-sync.sql` | `email_sync_state`, `emails` | yes |
-| `database/03-rate-calendar.sql` | `rate_seasons`, `property_rates` + `resolve_season`, `is_weekend_night`, `resolve_nightly_rate`, `quote_stay`, `required_min_nights` | **NOT YET** |
-| `database/04-winter-2026-27-rates.sql` | the proposed winter ladder + minNights and beds fixes | **NOT YET** |
+| `database/03-rate-calendar.sql` | `rate_seasons`, `property_rates` + `resolve_season`, `is_weekend_night`, `resolve_nightly_rate`, `quote_stay`, `required_min_nights` | **yes, 2026-08-25** |
+| `database/04-winter-2026-27-rates.sql` | the winter ladder + minNights and beds fixes | **yes, 2026-08-25** (11 seasons, 33 rate rows) |
+| `database/05-arrival-tokens.sql` | `reservations.arrival_token` + unique index, for the private arrival page | **yes, 2026-08-25** |
 
-`03` is structure only and changes no price. It falls back to `properties.pricing` for any night no
-season covers, so it is safe to apply at any time. `04` is the decision.
+Both applied 2026-08-25. The ladder went in **as written**, on the owner's call, without the
+occupancy check the decision rule below asks for: `reservations` is empty on this database, so that
+input does not exist. Revisit once a season of real booking data accumulates.
 
 ```powershell
 docker exec -i wcl-database psql -U wolfcreek -d wolfcreek < database\03-rate-calendar.sql
@@ -117,15 +137,71 @@ falls straight back to flat pricing.
 | `/area` | dynamic | seasonal activities + Highway 20 winter access |
 | `/about`, `/contact` | dynamic | |
 | `/availability` | static shell | calendar + admin sign-in (Microsoft OAuth) |
-| `/listings/[id]` | dynamic | per-SKU detail |
+| `/listings/[id]` | dynamic | per-SKU detail. Email-first booking panel; Airbnb demoted to a footnote link |
+| `/arrival/[token]` | dynamic | **new, PRIVATE.** Exact directions to the house. Token-gated, `noindex`, `Disallow`ed. Never link to it from a public page. |
 | `/llms.txt` | dynamic | **new.** Agent brief, generated from the same rows the site reads |
 | `/robots.txt`, `/sitemap.xml` | **new** | |
 | `/api/availability`, `/api/auth/[action]`, `/api/admin/bookings`, `/api/admin/blocks`, `/api/ical/[token]` | route handlers | |
 
 All pages carry a schema.org `@graph`: `LodgingBusiness` + three `VacationRental` nodes with 11
-seasonal `Offer` nodes each (once `03`/`04` are applied) and `eligibleQuantity` minimum stay. The
+seasonal `Offer` nodes each (live now that `03`/`04` are applied) and `eligibleQuantity` minimum stay. The
 three-SKU exclusion constraint is written out in plain language in every node description, because
 no vacation-rental schema can express it.
+
+---
+
+## Arrival details (private)
+
+Exact directions to the house are not public. They live at `/arrival/{arrival_token}`, one
+unguessable URL per reservation, using the same pattern as `properties.ical_export_token`.
+
+- **Token:** `reservations.arrival_token`, defaulted by the database, so anything that inserts a
+  reservation gets one without knowing about it. 122 bits via `gen_random_uuid()`.
+- **Revocation:** setting a reservation to `cancelled` or `no_show` makes the page 404 with no
+  extra step. To revoke without cancelling, rotate the token (statement at the bottom of
+  `database/05-arrival-tokens.sql`).
+- **Crawler defence, three layers:** the page sends `robots: noindex, nofollow, nocache`;
+  `/arrival/` is `Disallow`ed in `app/robots.js`; and it is not in the sitemap. It also sends
+  `referrer: no-referrer` so tapping the Google Maps button does not leak the token onward.
+- **Getting the link:** `POST /api/admin/bookings` now returns `arrival_url` alongside the
+  reservation, ready to paste into a confirmation email. For a reservation that already exists:
+
+  ```sql
+  SELECT g.email, r.check_in, 'https://wolfcreeklodge.us/arrival/' || r.arrival_token AS arrival_url
+    FROM reservations r JOIN guests g ON g.id = r.guest_id
+   WHERE r.status NOT IN ('cancelled','no_show');
+  ```
+
+Verified 2026-08-25 against a temporary reservation, since removed: valid token 200, unknown token
+404, cancelled reservation 404.
+
+---
+
+## Booking messaging
+
+Changed 2026-08-25. The site used to present Airbnb and direct booking as two equal options, with a
+red "Book on Airbnb" button beside every direct one. It no longer does. **Email is the booking
+channel**, the phone is offered as a secondary and explicitly described as slower, and Airbnb
+survives only as a plain text link for guests who specifically want the platform.
+
+| Surface | What it says now |
+|---|---|
+| `/listings/[id]` | `.booking-panel`: rate, "Email to Book" primary CTA, then "call or text ... email reaches us fastest". Airbnb is one `.booking-fallback` sentence below the panel. |
+| `/` | featured Retreat card CTA is "Email to Book". No Airbnb button anywhere on the page. |
+| `/contact` | "Booking is by email" replaces "Booking is handled through Airbnb". Phone carries "Email is checked far more often". The Airbnb list is retitled "Also listed on Airbnb" with a note that their total is higher. |
+| `/llms.txt` | states email is the booking channel, gives the phone with the caveat that it is not monitored closely, and tells agents not to route guests to Airbnb unless asked. |
+
+`.btn--airbnb` (the `#FF5A5F` button) still exists in `globals.css` but has no remaining usage in
+any component. Left in place rather than deleted, since removing it is a separate cleanup.
+
+Two related things worth knowing:
+
+- The listing pages previously computed the direct rate with a bare `* 1.1` inline, which is the
+  exact trap `CLAUDE.md` warns about. They now call `toDisplayRate()` from `lib/pricing.js`, so
+  the markup is defined in one place.
+- The phone number is read from `site_config.contact_phone` and formatted for display. It used to
+  be hard-coded in `contact/page.js` while the `tel:` href came from the database, so the two
+  could silently disagree.
 
 ---
 
@@ -156,14 +232,44 @@ Server instructions now state the exclusion constraint and the winter road const
    until it builds.
 2. **The photo layer is stubs.** `website/lib/photos.js`, `PhotoHero.js`, `PhotoGallery.js`,
    `FullBleedImage.js` are tracked as of 2026-08-25 so `main` builds, but they are stubs written on
-   migration day. Real versions are on the dead disk. Alt text and dimensions are placeholders.
-3. **~58 photos missing.** 142 of roughly 200 recovered. Find the gaps empirically: load the site
+   migration day. Real versions are on the dead disk. Dimensions are still placeholders (every photo
+   declared 1920x1080); alt text is now written per photo.
+   `getListingPhotos()` returned a bare `[]` while `listings/[id]/page.js` reads `photos.hero`
+   and `photos.gallery.length`, so all three listing pages threw and returned 500. Fixed
+   2026-08-25: it returns `{ hero, gallery }` per SKU and wires up the previously unreferenced
+   `public/images/apartment/` set.
+3. **The two orientation images are not on disk yet.** The code references them and the
+   directories exist, but the files were supplied in a chat session and have to be saved by hand:
+   - `website/public/images/arrival/directions-map.png` -- the annotated final-approach map.
+     **Private**, only rendered on `/arrival/{token}`.
+   - `website/public/images/aerial/property-overview.jpg` -- the annotated aerial. **Public**,
+     rendered on `/area`.
+
+   Both render through a plain `<img>` rather than `next/image`, because their intrinsic
+   dimensions are unknown and `lib/photos.js` would otherwise carry guessed numbers. Worth
+   switching to `next/image` once the files are in place and measured.
+
+4. **~58 photos missing.** 142 of roughly 200 recovered. Find the gaps empirically: load the site
    with DevTools open, filter Network by status 404, and note the filenames the code expects.
-4. **Six recovered photos may be HEIC** (from the `iOS/` subfolder). Convert if rendering fails.
-5. **Unverified since 2026-05-26** (no Docker reachable from a Cowork session, so these need a
-   human at the machine): whether Microsoft OAuth re-auth happened and email-sync stopped 401ing;
-   whether iCal sync is populating bookings; whether `init.sql` seeded the three properties with
-   their Airbnb iCal URLs.
+5. **Six recovered photos may be HEIC** (from the `iOS/` subfolder). Convert if rendering fails.
+6. **Sync workers run but are idle** (checked 2026-08-25, resolving the old "unverified" item):
+   - `init.sql` did seed the three properties. That part is fine.
+   - **iCal sync does nothing:** no property has `ical_import_url` set (the column is
+     `ical_import_url`, not `airbnb_ical_url`). `reservations` is empty and `ical_sync_log`
+     has zero rows, so availability shown anywhere is not real.
+   - **Email sync is still unauthorized:** "No refresh token found in email_sync_state". It wants a
+     login through the CRM, and the CRM does not build, so this is a deadlock. Breaking it means
+     fixing the CRM or seeding the refresh token another way.
+
+7. **`sharp` is missing from the website image.** Next.js standalone logs "sharp is required ...
+   for image optimization" plus `EACCES: mkdir '/app/.next/cache'` on every optimized image.
+   Images still serve 200, so this is a performance and caching problem, not an outage. Add
+   `sharp` to the website dependencies and give the runtime a writable `.next/cache`.
+
+8. **`mcp-server/requirements.txt` needed an upper bound.** It pinned `mcp[cli]>=1.0.0`; a fresh
+   resolve on 2026-08-25 pulled mcp 2.x, where `FastMCP` became `MCPServer`, and the container
+   crash-looped. Now `mcp[cli]>=1.0.0,<2` (running 1.29.1). Migrating `server.py` to the 2.x
+   API is still open work.
 
 ---
 
@@ -172,21 +278,37 @@ Server instructions now state the exclusion constraint and the winter road const
 1. **Recover the Pintea-Ubuntu disk.** A $15 USB-to-SATA/NVMe adapter. It holds the real photo
    components, the complete photo set, the original `.env`, and a 1011K `pg_dump` with booking and
    CRM history. Still the single highest-leverage action in this project.
-2. **Run `backup-wcl-assets.ps1`.** `website/public` (519 MB, 142 photos), `cloudflared/` and
-   `.env` are the only copies in existence and they sit inside a git working tree. The script
-   copies them to `C:\wcl-assets`, outside git, and points at rclone for offsite. Use a personal
-   B2/S3 remote, not the corporate Drive Gearbox uses; guest data has different residency
-   requirements. This is the local half of `MIGRATION-NOTES.md` item 6.
-3. **Decide the winter rate level, then apply `03` and `04`.** The gating input is last winter's
-   occupancy:
+2. **Run `backup-wcl-assets.ps1`.** `website/public` (549 MB), `cloudflared/` and `.env`
+   are the only copies in existence and they sit inside a git working tree. The script now takes
+   `-Dest` and `-SkipSecrets` (added 2026-08-25) so the two halves can go to different places:
+
+   ```powershell
+   # photos offsite to personal OneDrive -- marketing assets, safe to sync
+   .\backup-wcl-assets.ps1 -Dest "$env:OneDriveConsumer\wcl-assets" -SkipSecrets
+
+   # .env and cloudflared/ stay local, off any cloud-synced folder
+   .\backup-wcl-assets.ps1
    ```
-   docker exec wcl-database psql -U wolfcreek -d wolfcreek -c "SELECT property_id, count(*) AS bookings, sum(check_out - check_in) AS nights FROM reservations WHERE status NOT IN ('cancelled','no_show') AND check_in < '2026-04-01' AND check_out > '2025-12-01' GROUP BY property_id;"
-   ```
-   At or above 55 percent, apply the ladder as written. Between 40 and 55, apply it and take
-   another 8 to 10 percent off Sun-Thu in January core and late winter. Below 40, the level is
-   wrong and not just the shape: cut base winter 15 to 20 percent and keep the peak premiums.
-   The most contestable single number is the 4-night minimum on the Christmas corridor; the
-   published valley norm is a flat 2 nights, and 3 is the defensible retreat.
+
+   This machine's OneDrive is a **personal** Microsoft account (`OneDriveConsumer` is set,
+   `OneDriveCommercial` is empty), which satisfies the "personal remote, not the corporate Drive
+   Gearbox uses" rule. Do not drop `.env` or `cloudflared/` into it in plaintext -- those are live
+   production credentials, and per item 4 below they are already exposed and unrotated.
+
+   **Never move the repo itself into OneDrive.** Docker bind mounts plus file-level cloud sync
+   against a live `.git` is a corruption route, not a backup.
+
+3. **Watch the winter ladder against real bookings.** `03` and `04` are applied as of
+   2026-08-25, as written. They went in without the occupancy check the original decision rule
+   called for, because `reservations` is empty -- there is no booking history on this database to
+   check against. That makes the level an assumption, not a finding. The two numbers most worth
+   revisiting once enquiries start arriving:
+   - the **4-night minimum on the Christmas corridor**, where the published valley norm is a flat
+     2 nights and 3 is the defensible retreat;
+   - the **$1,095 base** for that corridor, which is roughly 2x the shoulder rate.
+
+   Rollback is still one statement: `DELETE FROM property_rates; DELETE FROM rate_seasons;`
+
 4. **Rotate the two exposed secrets.** `MICROSOFT_CLIENT_SECRET` and `ANTHROPIC_API_KEY` were
    pasted through a chat as a Parsec-clipboard workaround on migration day and have not been
    rotated. `MIGRATION-NOTES.md` has the exact steps.

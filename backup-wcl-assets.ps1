@@ -24,6 +24,16 @@
 # USAGE
 #   powershell -ExecutionPolicy Bypass -File .\backup-wcl-assets.ps1
 #
+#   -Dest <path>   where to copy. Defaults to C:\wcl-assets.
+#   -SkipSecrets   copy only website\public, leaving .env and cloudflared\ out.
+#                  Use this whenever -Dest is a cloud-synced folder: the photos
+#                  are marketing assets and belong there, the other two are live
+#                  production credentials and do not.
+#
+#   Recommended split -- photos offsite to personal OneDrive, secrets local only:
+#     .\backup-wcl-assets.ps1 -Dest "$env:OneDriveConsumer\wcl-assets" -SkipSecrets
+#     .\backup-wcl-assets.ps1
+#
 # SAFETY
 #   Copy-only. Never uses robocopy /MIR, so this backup can never delete a
 #   file that the source has lost. It also refuses to run if the source photo
@@ -31,10 +41,14 @@
 #   backup with less than it had.
 # =============================================================================
 
+param(
+    [string] $Dest = "C:\wcl-assets",
+    [switch] $SkipSecrets
+)
+
 $ErrorActionPreference = "Stop"
 
 $RepoRoot = $PSScriptRoot
-$Dest     = "C:\wcl-assets"
 $MinPhotos = 100   # sanity floor: we recovered 142
 
 Write-Host ""
@@ -66,20 +80,27 @@ Write-Host "Copying photos..." -ForegroundColor Cyan
 robocopy "$photoDir" "$Dest\public" /E /R:2 /W:2 /NFL /NDL /NJH /NJS
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed for website\public (exit $LASTEXITCODE)" }
 
+if ($SkipSecrets) {
+    Write-Host ""
+    Write-Host "Skipping .env and cloudflared\ (-SkipSecrets)." -ForegroundColor Yellow
+    Write-Host "Those still need a copy somewhere. Run this again without the switch"
+    Write-Host "and without -Dest to put them in C:wcl-assets, off the cloud."
+}
+
 $cf = Join-Path $RepoRoot "cloudflared"
-if (Test-Path $cf) {
+if (-not $SkipSecrets -and (Test-Path $cf)) {
     Write-Host "Copying tunnel credentials..." -ForegroundColor Cyan
     robocopy "$cf" "$Dest\cloudflared" /E /R:2 /W:2 /NFL /NDL /NJH /NJS
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed for cloudflared (exit $LASTEXITCODE)" }
-} else {
+} elseif (-not $SkipSecrets) {
     Write-Host "  WARNING: cloudflared\ not found" -ForegroundColor Yellow
 }
 
 $envFile = Join-Path $RepoRoot ".env"
-if (Test-Path $envFile) {
+if (-not $SkipSecrets -and (Test-Path $envFile)) {
     Write-Host "Copying .env..." -ForegroundColor Cyan
     Copy-Item $envFile (Join-Path $Dest ".env") -Force
-} else {
+} elseif (-not $SkipSecrets) {
     Write-Host "  WARNING: .env not found" -ForegroundColor Yellow
 }
 
@@ -112,8 +133,10 @@ if ($rclone) {
         Write-Host "To finish the offsite half of MIGRATION-NOTES item 6, run:"
         Write-Host "  rclone copy `"$Dest`" <remote>:wcl-assets --progress"
         Write-Host ""
-        Write-Host "Use a PERSONAL B2/S3 remote, not the corporate Drive that Gearbox"
-        Write-Host "backs up to. Guest data has different residency requirements."
+        Write-Host "Use a PERSONAL remote, not the corporate Drive that Gearbox backs"
+        Write-Host "up to. Guest data has different residency requirements. Personal"
+        Write-Host '  Personal OneDrive counts:'
+        Write-Host '    .\backup-wcl-assets.ps1 -Dest "$env:OneDriveConsumer\wcl-assets" -SkipSecrets'
     } else {
         Write-Host "rclone is installed but has no remotes configured. Run 'rclone config'." -ForegroundColor Yellow
     }

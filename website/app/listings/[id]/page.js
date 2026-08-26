@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getListing } from '../../../lib/data.js';
+import { getListing, getSiteConfig } from '../../../lib/data.js';
+import { toDisplayRate } from '../../../lib/pricing.js';
 import { getListingPhotos } from '../../../lib/photos.js';
 import PhotoHero from '../../components/PhotoHero';
 import { PhotoStrip } from '../../components/PhotoGallery';
@@ -31,6 +32,12 @@ function StarRating({ rating, count }) {
   );
 }
 
+function formatPhone(raw) {
+  const digits = String(raw || '').replace(/[^0-9]/g, '').slice(-10);
+  if (digits.length !== 10) return raw;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 function HighlightIcon({ icon }) {
   const icons = {
     'self-checkin': '\u{1F511}',
@@ -44,7 +51,7 @@ function HighlightIcon({ icon }) {
 
 export default async function ListingPage({ params }) {
   const { id } = await params;
-  const listing = await getListing(id);
+  const [listing, siteConfig] = await Promise.all([getListing(id), getSiteConfig()]);
 
   if (!listing) {
     return (
@@ -79,6 +86,30 @@ export default async function ListingPage({ params }) {
   } = listing;
 
   const photos = getListingPhotos(id);
+
+  const displayMin = toDisplayRate(pricing.nightlyRate.min);
+  const displayMax = toDisplayRate(pricing.nightlyRate.max);
+  const displayWeekend = pricing.weekendRate ? toDisplayRate(pricing.weekendRate) : null;
+
+  const bookingEmail = siteConfig?.contactEmail || 'wolfcreeklodge@outlook.com';
+  const phoneHref = (siteConfig?.contactPhone || '+12066810117').replace(/[^+0-9]/g, '');
+  const phoneDisplay = formatPhone(phoneHref);
+
+  const bookingMailto =
+    `mailto:${bookingEmail}` +
+    `?subject=${encodeURIComponent(`Booking inquiry: ${title}`)}` +
+    `&body=${encodeURIComponent(
+      `Hi Bo,
+
+I would like to book ${title}.
+
+` +
+        `Check-in: 
+Check-out: 
+Number of guests: 
+
+Thanks!`
+    )}`;
 
   return (
     <>
@@ -245,21 +276,21 @@ export default async function ListingPage({ params }) {
 
         {/* Pricing */}
         <section className="listing-section">
-          <h2 className="listing-section-title">Pricing</h2>
+          <h2 className="listing-section-title">Rates</h2>
 
-          <div className="pricing-comparison">
-            <div className="pricing-option pricing-option--direct">
-              <div className="pricing-option-badge">Best Value</div>
-              <h3>Book Direct</h3>
-              <div className="pricing-option-rate">
-                {pricing.nightlyRate.min === pricing.nightlyRate.max
-                  ? `$${Math.round(pricing.nightlyRate.min * 1.1)}`
-                  : `$${Math.round(pricing.nightlyRate.min * 1.1)} – $${Math.round(pricing.nightlyRate.max * 1.1)}`}
+          <div className="booking-panel">
+            <div className="booking-panel__rate">
+              <div className="booking-rate-value">
+                {displayMin === displayMax
+                  ? `$${displayMin}`
+                  : `$${displayMin} - $${displayMax}`}
                 <span> / night</span>
               </div>
-              <p className="pricing-option-note">Taxes included &mdash; no platform fees</p>
-              {pricing.weekendRate && (
-                <p className="pricing-option-detail">Weekend: ${Math.round(pricing.weekendRate * 1.1)}/night</p>
+              <p className="booking-rate-note">
+                Taxes included. No booking fees, no service charges.
+              </p>
+              {displayWeekend && (
+                <p className="pricing-option-detail">Weekend: ${displayWeekend}/night</p>
               )}
               {pricing.discounts?.weekly && (
                 <p className="pricing-option-detail">{pricing.discounts.weekly.percentage}% weekly discount</p>
@@ -267,51 +298,43 @@ export default async function ListingPage({ params }) {
               {pricing.discounts?.monthly && (
                 <p className="pricing-option-detail">{pricing.discounts.monthly.percentage}% monthly discount</p>
               )}
-              <a
-                href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(title)}&body=${encodeURIComponent(`Hi Bo,\n\nI'd like to book ${title}.\n\nPreferred dates: \nNumber of guests: \n\nThanks!`)}`}
-                className="btn btn--primary btn--large"
-                style={{ marginTop: '1rem', display: 'inline-block', width: '100%', textAlign: 'center' }}
-              >
-                Book Direct via Email
-              </a>
             </div>
 
-            <div className="pricing-option pricing-option--airbnb">
-              <h3>Airbnb</h3>
-              <div className="pricing-option-rate">
-                {pricing.nightlyRate.min === pricing.nightlyRate.max
-                  ? `$${pricing.nightlyRate.min}`
-                  : `$${pricing.nightlyRate.min} – $${pricing.nightlyRate.max}`}
-                <span> / night</span>
-              </div>
-              <p className="pricing-option-note">+ Airbnb service fee &amp; taxes</p>
-              {pricing.weekendRate && (
-                <p className="pricing-option-detail">Weekend: ${pricing.weekendRate}/night</p>
-              )}
-              {pricing.discounts?.weekly && (
-                <p className="pricing-option-detail">{pricing.discounts.weekly.percentage}% weekly discount</p>
-              )}
-              {pricing.discounts?.monthly && (
-                <p className="pricing-option-detail">{pricing.discounts.monthly.percentage}% monthly discount</p>
-              )}
-              <a
-                href={airbnbUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn--airbnb btn--large"
-                style={{ marginTop: '1rem', display: 'inline-block', width: '100%', textAlign: 'center' }}
-              >
-                Book on Airbnb
+            <div className="booking-panel__contact">
+              <h3>Reserve your dates</h3>
+              <p className="booking-panel__lead">
+                We book by email. Send your dates and party size and you will hear back from
+                Bo directly &mdash; no account, no platform in the middle.
+              </p>
+
+              <a href={bookingMailto} className="btn btn--primary btn--large booking-cta">
+                Email to Book
               </a>
+
+              <p className="booking-panel__phone">
+                Prefer to talk? Call or text <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>.{' '}
+                <span className="booking-panel__phone-note">
+                  Email reaches us fastest &mdash; the phone is not always answered.
+                </span>
+              </p>
             </div>
           </div>
+
+          <p className="booking-fallback">
+            Already a returning Airbnb guest, or want the platform booking flow?{' '}
+            <a href={airbnbUrl} target="_blank" rel="noopener noreferrer">
+              this place is also listed on Airbnb
+            </a>
+            , at a higher total once their fees are added.
+          </p>
         </section>
 
         {/* Cancellation */}
         <section className="listing-section">
           <h2 className="listing-section-title">Cancellation Policy</h2>
           <p className="listing-description">
-            <strong>{cancellationPolicy}</strong> &mdash; Review the full cancellation policy on Airbnb before booking.
+            <strong>{cancellationPolicy}</strong> &mdash; we confirm the exact terms in writing when
+            we hold your dates. Ask us anything about it before you commit.
           </p>
         </section>
 
@@ -339,30 +362,21 @@ export default async function ListingPage({ params }) {
         {/* CTA */}
         <section className="listing-section text-center">
           <h2 className="listing-section-title">Ready to Book?</h2>
-          <p className="listing-description" style={{ margin: '0 auto 1.5rem', maxWidth: '500px' }}>
-            Book direct for the best rate (taxes included, no platform fees) or use Airbnb for instant confirmation.
+          <p className="listing-description" style={{ margin: '0 auto 1.5rem', maxWidth: '520px' }}>
+            Email is the fastest way to reach us, and the best rate you will find for this
+            place &mdash; taxes included, no booking fees.
           </p>
           <div className="cta-buttons">
-            <a
-              href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(title)}&body=${encodeURIComponent(`Hi Bo,\n\nI'd like to book ${title}.\n\nPreferred dates: \nNumber of guests: \n\nThanks!`)}`}
-              className="btn btn--primary btn--large"
-            >
-              Book Direct via Email
+            <a href={bookingMailto} className="btn btn--primary btn--large">
+              Email to Book
             </a>
-            <a
-              href={airbnbUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn--airbnb btn--large"
-            >
-              Book on Airbnb
-            </a>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <Link href="/availability" className="btn btn--secondary btn--small">
+            <Link href="/availability" className="btn btn--secondary btn--large">
               Check Availability
             </Link>
           </div>
+          <p className="cta-phone">
+            Or call/text <a href={`tel:${phoneHref}`}>{phoneDisplay}</a> &mdash; email preferred.
+          </p>
         </section>
       </div>
     </>

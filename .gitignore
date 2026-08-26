@@ -10,3 +10,12 @@ __pycache__/
 cloudflared/
 backups/
 
+
+# Photo assets: ~549 MB, and the only copies in existence.
+# Deliberately NOT in git -- they would bloat history permanently and GitHub
+# rejects individual files over 100 MB. They are protected instead by
+# backup-wcl-assets.ps1, which copies them outside the working tree and,
+# with -Dest, offsite. See STATUS.md open task 2.
+# website/public/.gitkeep stays tracked so the directory survives a clean clone.
+website/public/photos/
+website/public/images/

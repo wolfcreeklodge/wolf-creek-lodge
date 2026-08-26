@@ -44,7 +44,8 @@ export default async function ContactPage() {
                 <span className="contact-item-icon">&#128222;</span>
                 <div className="contact-item-text">
                   <strong>Phone</strong>
-                  <a href={`tel:${siteConfig.contactPhone}`}>+1 (206) 681-0117</a>
+                  <a href={`tel:${siteConfig.contactPhone}`}>{siteConfig.contactPhone}</a>
+                  <span className="contact-item-note">Email is checked far more often.</span>
                 </div>
               </div>
               <div className="contact-item">
@@ -62,12 +63,20 @@ export default async function ContactPage() {
               </div>
 
               <div className="contact-note">
-                Booking is handled through Airbnb. Use this form for general inquiries, group/retreat
-                questions, or anything else — we will get back to you as soon as possible.
+                <strong>Booking is by email.</strong> Send us your dates and party size using this
+                form or at{' '}
+                <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> and Bo
+                will get back to you directly. You are booking with the owner, not through a
+                platform, so there are no service fees and the rate you are quoted is the rate you
+                pay.
               </div>
 
               <div className="airbnb-links">
-                <h4>Book on Airbnb</h4>
+                <h4>Also listed on Airbnb</h4>
+                <p className="airbnb-links__note">
+                  If you would rather use the platform, these are the same properties &mdash; the
+                  total will be higher once their fees are added.
+                </p>
                 {listings.map((listing) => (
                   <a
                     key={listing.id}

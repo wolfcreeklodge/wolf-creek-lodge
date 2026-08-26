@@ -4,7 +4,7 @@ import { getSiteConfig, getListings } from '../lib/data.js';
 import {
   heroPhoto, nightPhoto, entrancePhoto,
   greatRoomPhotos, diningKitchenPhotos, bedroomPhotos, libraryPhotos,
-  groundsPhotos, warmingHutPhotos,
+  groundsPhotos, warmingHutPhotos, PROPERTY_AERIAL,
 } from '../lib/photos.js';
 import PhotoHero from './components/PhotoHero';
 import FullBleedImage from './components/FullBleedImage';
@@ -76,7 +76,7 @@ function PropertyCard({ listing, photo }) {
             href={`mailto:wolfcreeklodge@outlook.com?subject=Booking Inquiry: ${encodeURIComponent(listing.title)}`}
             className="btn btn--primary btn--small"
           >
-            Book Direct
+            Email to Book
           </a>
         </div>
       </div>
@@ -99,8 +99,10 @@ export default async function Home() {
     <>
       <StructuredData siteConfig={siteConfig} listings={listings} calendar={calendar} />
 
-      {/* Hero — full-width exterior photo */}
-      <PhotoHero photo={heroPhoto}>
+      {/* Hero -- aerial over the valley. Promoted from /area 2026-08-25:
+          it establishes the setting in a way no exterior shot of the building
+          does, which is the thing a first-time visitor is actually judging. */}
+      <PhotoHero photo={PROPERTY_AERIAL}>
         <h1>
           Wolfridge<br />
           <em>Retreats</em>
@@ -191,12 +193,12 @@ export default async function Home() {
                   View Details
                 </Link>
                 <a
-                  href={retreat.airbnbUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn--airbnb"
+                  href={`mailto:wolfcreeklodge@outlook.com?subject=${encodeURIComponent(
+                    `Booking inquiry: ${retreat.title}`
+                  )}`}
+                  className="btn btn--primary"
                 >
-                  Book on Airbnb
+                  Email to Book
                 </a>
               </div>
             </div>

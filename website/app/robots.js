@@ -4,7 +4,9 @@ export default function robots() {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/availability/admin'],
+        // /arrival/* carries the exact route to the house and is token-gated.
+        // The pages also send robots: noindex, this is belt and braces.
+        disallow: ['/api/', '/availability/admin', '/arrival/'],
       },
     ],
     sitemap: 'https://wolfcreeklodge.us/sitemap.xml',

@@ -55,7 +55,20 @@ export async function POST(request) {
     );
 
     await client.query('COMMIT');
-    return NextResponse.json(reservation[0], { status: 201 });
+
+    // Hand back the private arrival link so it can go straight into the
+    // confirmation email. arrival_token is defaulted by the database
+    // (see database/05-arrival-tokens.sql), so it is already on this row.
+    const created = reservation[0];
+    return NextResponse.json(
+      {
+        ...created,
+        arrival_url: created.arrival_token
+          ? `https://wolfcreeklodge.us/arrival/${created.arrival_token}`
+          : null,
+      },
+      { status: 201 }
+    );
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.message.includes('overlap') || err.message.includes('exclusivity')) {
