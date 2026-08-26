@@ -164,7 +164,8 @@ export default function StructuredData({ siteConfig, listings, calendar = [] }) 
       description:
         'Two mountain homes at Wolfridge Resort in Winthrop, Washington, bookable as three ' +
         'configurations: the 3-bedroom house, the 1-bedroom apartment, or both together as a ' +
-        '4-bedroom retreat. Ski-in/ski-out on the Methow Community Trail. ' +
+        '4-bedroom retreat. The Methow Community Trail crosses the property about 40 feet ' +
+        'from the back door, so this is literally ski-in/ski-out. ' +
         'The three configurations are mutually exclusive: booking any one of them blocks the others.',
       url: SITE,
       telephone: siteConfig?.contactPhone,

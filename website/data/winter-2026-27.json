@@ -2,7 +2,6 @@
   "season": "2026/27",
   "compiledOn": "2026-08-25",
   "note": "Every entry carries a source and a confidence flag. 'confirmed' means the 2026/27 figure is published. 'annual' means the event recurs but the 2026/27 date is not yet published. Nothing on this page is asserted without a source.",
-
   "trails": {
     "network": "Methow Trails",
     "groomedKm": "200+",
@@ -13,8 +12,9 @@
     "communityTrail": {
       "name": "Methow Community Trail",
       "lengthKm": 30,
-      "detail": "The connector that links the four primary trail areas: Mazama, Winthrop, Sun Mountain and Cub Creek. Wolf Ridge is a named trailhead on the corridor, which is what ski-in/ski-out means here in practice.",
-      "source": "https://www.wta.org/go-hiking/hikes/methow-community-trail"
+      "detail": "The connector that links the four primary trail areas: Mazama, Winthrop, Sun Mountain and Cub Creek. It crosses the property about 40 feet from the back door of the house, which is what ski-in/ski-out means here in practice. Distance supplied by the owner, 2026-08-26; not independently measured.",
+      "source": "https://www.wta.org/go-hiking/hikes/methow-community-trail",
+      "distanceFromBackDoorFt": 40
     },
     "seasonOpening": {
       "text": "Grooming begins when the snow arrives, which in recent years has been anywhere from late October to early December. The 2026/27 opening date is not yet announced.",
@@ -22,20 +22,49 @@
       "source": "https://methowtrails.org/conditions"
     },
     "passes": [
-      { "name": "Ski day pass", "price": 32 },
-      { "name": "Three consecutive days", "price": 84, "note": "plus $28 for each additional day" },
-      { "name": "Ten day punch card", "price": 280 },
-      { "name": "Annual (on sale after Nov 1 2026)", "price": 425 },
-      { "name": "Annual weekday", "price": 225 },
-      { "name": "Snowshoe or fat bike day pass", "price": 10 },
-      { "name": "Snowshoe and fat bike annual", "price": 50 },
-      { "name": "Dog day pass / annual", "price": 10, "note": "$50 annual, select dog friendly trails" },
-      { "name": "Kids 17 and under, adults 75 and over", "price": 0, "note": "free every day" }
+      {
+        "name": "Ski day pass",
+        "price": 32
+      },
+      {
+        "name": "Three consecutive days",
+        "price": 84,
+        "note": "plus $28 for each additional day"
+      },
+      {
+        "name": "Ten day punch card",
+        "price": 280
+      },
+      {
+        "name": "Annual (on sale after Nov 1 2026)",
+        "price": 425
+      },
+      {
+        "name": "Annual weekday",
+        "price": 225
+      },
+      {
+        "name": "Snowshoe or fat bike day pass",
+        "price": 10
+      },
+      {
+        "name": "Snowshoe and fat bike annual",
+        "price": 50
+      },
+      {
+        "name": "Dog day pass / annual",
+        "price": 10,
+        "note": "$50 annual, select dog friendly trails"
+      },
+      {
+        "name": "Kids 17 and under, adults 75 and over",
+        "price": 0,
+        "note": "free every day"
+      }
     ],
     "passSource": "https://methowtrails.org/passes",
     "passConfidence": "confirmed"
   },
-
   "downhill": {
     "name": "Loup Loup Ski Bowl",
     "driveFromWinthrop": "about 30 minutes",
@@ -53,7 +82,6 @@
       "https://skitheloup.org/plan-your-visit/passes-tickets/"
     ]
   },
-
   "gettingHere": {
     "headline": "Highway 20 is closed all winter. Plan the southern route.",
     "detail": "The North Cascades Highway (SR 20) over Rainy and Washington passes closes every winter and does not reopen until somewhere between mid April and early May. It closed on December 4 in 2025 and the eastern section did not reopen until April 30 2026. From Seattle in winter you come around the south end: I-90 or US 2 east, then north up the Columbia and into the valley. It is a longer drive than the map app will suggest in July, so give yourself the afternoon.",
@@ -63,7 +91,6 @@
       "https://wsdotblog.blogspot.com/2026/04/north-cascades-highway-2026-opening.html"
     ]
   },
-
   "events": [
     {
       "name": "Christmas at the End of the Road",
@@ -138,12 +165,27 @@
       "source": "https://winthropballoonroundup.com/"
     }
   ],
-
   "planningWindows": [
-    { "label": "Thanksgiving and the Christmas festival", "dates": "November 25 to 29, 2026", "why": "Christmas at the End of the Road lands on Thanksgiving weekend this year." },
-    { "label": "Christmas and New Year", "dates": "December 25, 2026 to January 3, 2027", "why": "Christmas Day and New Year's Day both fall on a Friday, which fuses the two holidays into one continuous ten night stretch." },
-    { "label": "MLK weekend", "dates": "January 15 to 18, 2027", "why": "Three day weekend, reliable mid winter grooming." },
-    { "label": "Presidents Day and Seattle mid winter break", "dates": "February 13 to 21, 2027", "why": "Presidents Day is Monday February 15 and Seattle Public Schools mid winter break runs February 16 to 19, which gives Seattle families a nine day window. The strongest family week of the season." }
+    {
+      "label": "Thanksgiving and the Christmas festival",
+      "dates": "November 25 to 29, 2026",
+      "why": "Christmas at the End of the Road lands on Thanksgiving weekend this year."
+    },
+    {
+      "label": "Christmas and New Year",
+      "dates": "December 25, 2026 to January 3, 2027",
+      "why": "Christmas Day and New Year's Day both fall on a Friday, which fuses the two holidays into one continuous ten night stretch."
+    },
+    {
+      "label": "MLK weekend",
+      "dates": "January 15 to 18, 2027",
+      "why": "Three day weekend, reliable mid winter grooming."
+    },
+    {
+      "label": "Presidents Day and Seattle mid winter break",
+      "dates": "February 13 to 21, 2027",
+      "why": "Presidents Day is Monday February 15 and Seattle Public Schools mid winter break runs February 16 to 19, which gives Seattle families a nine day window. The strongest family week of the season."
+    }
   ],
   "planningWindowSources": [
     "https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/",

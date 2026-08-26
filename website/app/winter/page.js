@@ -53,7 +53,8 @@ export default async function WinterPage() {
         <p className="section-label">Winter {winter.season} &middot; Methow Valley</p>
         <h1>Winter on the Trail</h1>
         <p>
-          The Methow Community Trail runs past the door. Wolf Ridge is a named trailhead on it,
+          The Methow Community Trail crosses the property about forty feet from the back door.
+          Wolf Ridge is a named trailhead on it,
           which means the skiing starts where the shoveling ends (no drive, no parking lot,
           no loading skis onto a car in the dark).
         </p>

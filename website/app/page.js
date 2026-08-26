@@ -133,7 +133,8 @@ export default async function Home() {
             <p className="section-label">Winter 2026/27</p>
             <h2>The trail is groomed overnight. Your skis start at the door.</h2>
             <p>
-              Wolf Ridge is a named trailhead on the Methow Community Trail, which is the spine of
+              The Methow Community Trail crosses the property forty feet from the back door. Wolf
+              Ridge is a named trailhead on it, and it is the spine of
               a 200+ km network (the largest in North America). Trail pass prices, the 2026/27 event
               calendar, and the one thing Seattle guests get wrong about the winter drive.
             </p>
@@ -335,7 +336,7 @@ export default async function Home() {
               <div className="season-icon">&#10052;</div>
               <h3>Winter</h3>
               <ul>
-                <li>Ski-in/ski-out on the Methow Community Trail, groomed overnight</li>
+                <li>Methow Community Trail crosses the property, 40 ft from the back door</li>
                 <li>200+ km of trails, the largest nordic network in North America</li>
                 <li>Loup Loup Ski Bowl for downhill, about 30 minutes away</li>
                 <li>Snowshoe and fat bike routes on the same network</li>

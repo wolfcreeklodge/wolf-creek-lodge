@@ -32,9 +32,9 @@ export default async function AreaPage() {
           <p className="section-label">Out the Back Door</p>
           <h2 className="section-title">Leave the Car Where It Is</h2>
           <p className="section-subtitle">
-            Wolf Ridge is a named trailhead on the Methow Community Trail. Not near one &mdash;
-            on one. The trail runs past the property, so the walk starts at the back door
-            rather than at a car park half an hour away.
+            The Methow Community Trail crosses the property, about forty feet from the back
+            door. Not near a trailhead &mdash; on the trail. The walk starts where you are
+            standing, not at a car park half an hour away.
           </p>
 
           <div className="backdoor-facts">
@@ -49,10 +49,10 @@ export default async function AreaPage() {
             <div className="backdoor-fact">
               <h3>The trail</h3>
               <p>
-                The Methow Community Trail is a 30 km connector linking Mazama, Winthrop, Sun
-                Mountain and Cub Creek. It is the spine of a 200+ km network, the largest
-                cross-country ski system in North America, groomed overnight in winter and open
-                to boots and tyres the rest of the year.
+                Forty feet from the back door. The Methow Community Trail is a 30 km connector
+                linking Mazama, Winthrop, Sun Mountain and Cub Creek, and the spine of a 200+ km
+                network &mdash; the largest cross-country ski system in North America. Groomed
+                overnight in winter, open to boots and tyres the rest of the year.
               </p>
             </div>
             <div className="backdoor-fact">

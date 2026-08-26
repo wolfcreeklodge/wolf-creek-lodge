@@ -35,7 +35,8 @@ export async function GET() {
   lines.push('');
   lines.push(
     '> Two mountain homes at Wolfridge Resort, 17 Lucky Louie Rd, Winthrop, WA 98862, in the',
-    '> Methow Valley. Ski-in/ski-out on the Methow Community Trail, part of the 200+ km Methow',
+    '> Methow Valley. The Methow Community Trail crosses the property about 40 feet from the',
+    '> back door, so this is literally ski-in/ski-out. It is part of the 200+ km Methow',
     '> Trails network. Bookable directly, without an OTA.'
   );
   lines.push('');
