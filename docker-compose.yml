@@ -108,6 +108,26 @@ services:
       database:
         condition: service_healthy
 
+  # Self-hosted analytics. Its own database inside the existing Postgres, so
+  # nothing about guest traffic leaves the machine and there is no third party
+  # to sign a data agreement with. Bound to localhost like everything else; the
+  # browser reaches it through a Next.js rewrite at /stats, not a public
+  # hostname, which also means ad blockers do not recognise it as a tracker.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: wcl-umami
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:3000"
+    environment:
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET:-change_me_umami_app_secret}
+      DISABLE_TELEMETRY: "1"
+    depends_on:
+      database:
+        condition: service_healthy
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: wcl-cloudflared

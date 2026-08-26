@@ -109,6 +109,15 @@ export default function RootLayout({ children }) {
         </nav>
         <main>{children}</main>
         <Footer />
+        {/* Self-hosted Umami, proxied through /stats so it is not on any
+            tracker blocklist. No cookies, no cross-site identifiers, so no
+            consent banner is required. defer keeps it off the critical path. */}
+        <script
+          defer
+          src="/stats/script.js"
+          data-website-id="10869b7c-e7c7-4a5b-beea-001e6497f705"
+          data-host-url="https://wolfcreeklodge.us/stats"
+        />
       </body>
     </html>
   );
