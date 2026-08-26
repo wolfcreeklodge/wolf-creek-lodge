@@ -79,7 +79,7 @@ All via `docker-compose.yml` at project root. `docker compose up -d` brings up e
 | `wcl-database` | `postgres:16-alpine` | expose 5432 only | volume `pgdata` -> `wolf-creek-lodge_pgdata` |
 | `wcl-website` | `./website` | `127.0.0.1:8080` -> 3000 | Next.js 14 App Router, `output: standalone` |
 | `wcl-mcp-server` | `./mcp-server` | `127.0.0.1:8081` | Python FastMCP, SSE transport, serves at `/sse` only |
-| `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | Express + Vite SPA. Builds and runs. Local only, no tunnel route. |
+| `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | Express + Vite SPA. Published at `crm.wolfcreeklodge.us`. Sign-in works only through the tunnel: the app sends one redirect URI and it is the https one. |
 | `wcl-ical-sync` | `./scripts` (`sync-ical.mjs`) | none | pulls Airbnb iCal into `reservations` |
 | `wcl-email-sync` | `./scripts` (`Dockerfile.email-sync`) | none | Microsoft Graph -> `emails` |
 | `wcl-cloudflared` | `cloudflare/cloudflared:latest` | none | mounts `./cloudflared` read-only |
@@ -93,9 +93,9 @@ exists but is overridden by server-side routes pushed at connection time. For ro
 one.dash.cloudflare.com -> Networks -> Tunnels -> wolfcreek -> Public Hostname. The local file is
 documentation only. (Older notes in `CLAUDE.md` said the opposite; the migration disproved it.)
 
-Routes: `wolfcreeklodge.us` -> `website:3000`, `mcp.wolfcreeklodge.us` -> `mcp-server:8081`.
-The `crm.wolfcreeklodge.us` route was deleted deliberately, better a clean 404 than a broken
-backend. Routes must use the compose service name, not `localhost`; inside the cloudflared
+Routes: `wolfcreeklodge.us` -> `website:3000`, `mcp.wolfcreeklodge.us` -> `mcp-server:8081`,
+`crm.wolfcreeklodge.us` -> `crm:3000` (re-added 2026-08-26; it had been deleted while the CRM
+looked broken). Routes must use the compose service name, not `localhost`; inside the cloudflared
 container `localhost` is the container itself.
 
 ---
@@ -370,9 +370,12 @@ Server instructions now state the exclusion constraint and the winter road const
 4. **Rotate the two exposed secrets.** `MICROSOFT_CLIENT_SECRET` and `ANTHROPIC_API_KEY` were
    pasted through a chat as a Parsec-clipboard workaround on migration day and have not been
    rotated. `MIGRATION-NOTES.md` has the exact steps.
-5. **~~Log into the CRM~~ -- done 2026-08-25, email sync is live.** Do **not** re-add the
-   Cloudflare route for the CRM: it is an admin tool with the owner's mailbox attached, and is
-   better reached over localhost at the machine than published.
+5. **~~Log into the CRM~~ -- done. Email sync is live and the CRM is published.** On the owner's
+   call the `crm.wolfcreeklodge.us` route was re-added 2026-08-26, reversing the earlier
+   localhost-only recommendation. The tradeoff stands and is worth restating: this is an admin
+   tool holding guest records, payment status and read access to the mailbox. Its protection is
+   Microsoft OAuth plus `CRM_ALLOWED_EMAILS`, which now fails closed. `DEV_BYPASS_AUTH` must
+   stay `false`; with a public route a stray `true` exposes the CRM outright.
 6. **Fix the CRLF situation.** `core.autocrlf` is unset, so the working tree is CRLF while the
    blobs are LF and `git status` reports 80-plus modified files with ~17,000 phantom line changes.
    With `--ignore-all-space` there are none left. A `.gitattributes` with `* text=auto eol=lf`
