@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getSiteConfig } from '../../lib/data.js';
 import winter from '../../data/winter-2026-27.json';
-import { areaPhotos } from '../../lib/photos.js';
+import { backDoorPhotos, widerValleyPhotos } from '../../lib/photos.js';
 import { GallerySection } from '../components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
@@ -25,17 +25,64 @@ export default async function AreaPage() {
         </p>
       </section>
 
-      {/* Out in the valley. Creek is the resident pointer and comes along. */}
+      {/* The lead. Everything on this page is arranged around one fact: you can
+          leave the car where it is. */}
       <section className="section">
         <div className="container">
-          <p className="section-label">Out the Door</p>
-          <h2 className="section-title">The Valley, and Creek</h2>
+          <p className="section-label">Out the Back Door</p>
+          <h2 className="section-title">Leave the Car Where It Is</h2>
           <p className="section-subtitle">
-            Creek is our German shorthaired pointer and the unofficial head of guest relations.
-            He knows the river bluffs and the ridge trails better than anyone, and he is happy
-            to show you both.
+            Wolf Ridge is a named trailhead on the Methow Community Trail. Not near one &mdash;
+            on one. The trail runs past the property, so the walk starts at the back door
+            rather than at a car park half an hour away.
           </p>
-          <GallerySection photos={areaPhotos} />
+
+          <div className="backdoor-facts">
+            <div className="backdoor-fact">
+              <h3>The river</h3>
+              <p>
+                A short walk through the cottonwoods and you are standing on the gravel bar
+                with the water running past. Cold, clear and loud in spring; slow and swimmable
+                by August.
+              </p>
+            </div>
+            <div className="backdoor-fact">
+              <h3>The trail</h3>
+              <p>
+                The Methow Community Trail is a 30 km connector linking Mazama, Winthrop, Sun
+                Mountain and Cub Creek. It is the spine of a 200+ km network, the largest
+                cross-country ski system in North America, groomed overnight in winter and open
+                to boots and tyres the rest of the year.
+              </p>
+            </div>
+            <div className="backdoor-fact">
+              <h3>The woods</h3>
+              <p>
+                Open ponderosa behind the meadow, with deer, squirrels and, most mornings,
+                Creek somewhere out in front locked on point.
+              </p>
+            </div>
+          </div>
+
+          <GallerySection photos={backDoorPhotos} />
+          <p className="gallery-note">
+            All of the above is on foot from the property. Creek, our German shorthaired
+            pointer and unofficial head of guest relations, will show you the way whether or
+            not you ask him to.
+          </p>
+        </div>
+      </section>
+
+      {/* Everything beyond walking range, kept separate on purpose. */}
+      <section className="section section--alt">
+        <div className="container">
+          <p className="section-label">Worth the Drive</p>
+          <h2 className="section-title">Further Up the Valley</h2>
+          <p className="section-subtitle">
+            The rest of the Methow is a short drive: the bluffs over the lower river, the ridge
+            trails, and the peaks at the head of the valley where the snow sits into July.
+          </p>
+          <GallerySection photos={widerValleyPhotos} />
         </div>
       </section>
 

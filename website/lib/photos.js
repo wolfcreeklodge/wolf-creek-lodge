@@ -66,16 +66,38 @@ export const warmingHutPhotos = [
 // The valley, and Creek, the resident German shorthaired pointer. These are what
 // guests actually do here: the river, the bluffs above it, and the peaks at the
 // head of the valley. Added 2026-08-26; /area had carried no photographs at all.
-export const areaPhotos = [
+// Split deliberately. The first group is reachable on foot from the property.
+// The second is the wider valley and needs a drive -- the dry sagebrush country
+// in those frames is the lower valley, not the forested reach behind the house.
+// Do not merge them: the whole point of the page is which is which.
+export const backDoorPhotos = [
+  photo('/images/area/river-from-the-path.jpg',
+    'The river running clear between cottonwoods and pines, seen from the bank path, with snow still on the peaks upvalley',
+    2000, 1500),
+  photo('/images/area/river-gravel-bar.jpg',
+    'Creek, a German shorthaired pointer, standing on the cobbled gravel bar at the edge of the water',
+    2000, 3556),
+  photo('/images/area/trail-through-woods.jpg',
+    'A singletrack trail winding through open woods with the last of the snow lying in the hollows',
+    2000, 1500),
+  photo('/images/area/creek-on-point.jpg',
+    'Creek locked on point among the timber, one foot raised, in the woods behind the property',
+    2000, 2667),
+];
+
+export const widerValleyPhotos = [
   photo('/images/area/creek-river-bluff.jpg',
-    'Creek, a German shorthaired pointer, standing on a bluff above a bend in the Methow River with the valley opening out beyond',
+    'Creek standing on a bluff high above a bend in the water, the valley opening out to dry hills beyond',
     2000, 1125),
   photo('/images/area/creek-overlook.jpg',
-    'Creek sitting at the edge of the bluff, looking out over the river to the dry hills and distant snow',
+    'Creek sitting at the edge of the bluff, looking out over the water to the hills and distant snow',
     2000, 2667),
   photo('/images/area/methow-peaks.jpg',
     'Snow-covered peaks at the head of the valley, seen through standing timber from a ridge trail',
     2000, 2667),
+  photo('/images/area/valley-panorama.jpg',
+    'The whole valley from a high shoulder: forest, meadow and river running away to the mountains',
+    2000, 1500),
   photo('/images/area/valley-from-ridge.jpg',
     'The forested valley floor and the river far below, framed by pines from high on a ridge',
     2000, 2667),
