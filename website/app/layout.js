@@ -1,6 +1,7 @@
 import './globals.css';
 import Link from 'next/link';
 import { MobileNav } from './MobileNav';
+import { BookingTracker } from './components/BookingTracker';
 
 export const metadata = {
   metadataBase: new URL('https://wolfcreeklodge.us'),
@@ -118,6 +119,7 @@ export default function RootLayout({ children }) {
           data-website-id="10869b7c-e7c7-4a5b-beea-001e6497f705"
           data-host-url="https://wolfcreeklodge.us/stats"
         />
+        <BookingTracker />
       </body>
     </html>
   );
