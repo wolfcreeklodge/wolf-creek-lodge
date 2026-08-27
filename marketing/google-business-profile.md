@@ -68,6 +68,54 @@ listing.
 
 ---
 
+## Step by step
+
+Confirmed 2026-08-26 from Google Maps: `17 Lucky Louie Rd` resolves as an address
+only, with "Add your business" offered in the panel. Plus Code `GP2J+89 Winthrop`.
+
+**1. Decide which Google account owns this, before you click anything.**
+The account you use becomes the profile owner. Moving ownership later is possible
+but tedious. Use an account you will still control in five years and that is not
+shared. You can add managers afterwards without giving up ownership.
+
+**2. Start the flow.** Either click **Add your business** from the Maps panel, or
+go to <https://business.google.com/create>. Both land in the same place.
+
+**3. Business name:** `Wolfridge Retreats`
+Exactly that. Do not append "Winthrop Cabin Rental" or similar. Keyword stuffing the
+name is a guideline violation and one of the most common causes of suspension.
+
+**4. Category:** `Vacation home rental`
+Not "Hotel". The resort next door is a hotel-class listing; you are not. The category
+drives which searches you appear in, so this one matters more than it looks.
+
+**5. "Do you want to add a location customers can visit?"** &rarr; **Yes**.
+Then enter `17 Lucky Louie Rd, Winthrop, WA 98862`.
+
+**6. Drag the pin onto the actual building.** This is the step people skip. Google
+geocodes the address to a guess, and in the Maps view the marker sits out in open
+ground rather than on the house. Switch to satellite and drop it on the roof. A wrong
+pin means guests are directed to a field, and it is much harder to correct later.
+
+**7. Service area:** skip it. Guests come to you; you do not travel to them. Setting
+a service area on a lodging listing muddles what Google thinks you are.
+
+**8. Contact details.**
+- Phone: `+1 206-681-0117`
+- Website: the tagged URL from Core fields below, so Maps traffic is measurable.
+
+**9. Verification.** Choose **video** if it is offered - it is immediate and avoids
+the postcard entirely. If only postcard is available, request it timed to a Winthrop
+week. Nothing you enter goes live until this completes.
+
+**10. Only after verification**, fill in hours, description, attributes and photos
+from the sections below. Adding them before verification sometimes loses them.
+
+**11. Then close the loop on the site.** Add the resulting Google Maps place URL to
+the footer and `/contact`, and check Umami for arrivals under campaign `gbp`.
+
+---
+
 ## Core fields
 
 | Field | Value |
