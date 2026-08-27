@@ -81,13 +81,19 @@ shared. You can add managers afterwards without giving up ownership.
 **2. Start the flow.** Either click **Add your business** from the Maps panel, or
 go to <https://business.google.com/create>. Both land in the same place.
 
-**3. Business name:** `Wolfridge Retreats`
+**3. Business name:** `Wolfcreek Lodge`
 Exactly that. Do not append "Winthrop Cabin Rental" or similar. Keyword stuffing the
 name is a guideline violation and one of the most common causes of suspension.
 
-**4. Category:** `Vacation home rental`
-Not "Hotel". The resort next door is a hotel-class listing; you are not. The category
-drives which searches you appear in, so this one matters more than it looks.
+**4. Category:** `Lodge` - confirmed available and accepted 2026-08-26.
+Not "Hotel". Google gates that on operations - a front desk, on-site management,
+direct guest contact - not on how good the building is. Rates and availability there
+also require a Hotel Center connection through a booking engine or channel manager,
+which this property does not have, so a Hotel listing would either show an empty
+"Check availability" panel or fill it from partner feeds and route traffic to Vrbo.
+`Lodge` matches the name, sits in lodging, and keeps the Website button as the
+primary call to action, which is the whole point of the profile. Add
+`Vacation home rental` and `Cabin rental` as secondaries.
 
 **5. "Do you want to add a location customers can visit?"** &rarr; **Yes**.
 Then enter `17 Lucky Louie Rd, Winthrop, WA 98862`.
@@ -120,9 +126,10 @@ the footer and `/contact`, and check Umami for arrivals under campaign `gbp`.
 
 | Field | Value |
 |---|---|
-| Business name | `Wolfridge Retreats` |
-| Primary category | `Vacation home rental` |
-| Secondary categories | `Holiday home`, `Lodging` |
+| Business name | `Wolfcreek Lodge` |
+| Primary category | `Lodge` -- accepted by Google 2026-08-26 |
+| Secondary categories | `Vacation home rental`, `Cabin rental`, `Holiday home` |
+| Business type | **Local store only.** Not Online retail (there is no checkout, booking is an email enquiry) and not Service business (guests come here; a service area muddles what Google thinks this is) |
 | Address | `17 Lucky Louie Rd, Winthrop, WA 98862` |
 | Phone | `+1 206-681-0117` |
 | Website | `https://wolfcreeklodge.us/?utm_source=google&utm_medium=organic&utm_campaign=gbp` |
