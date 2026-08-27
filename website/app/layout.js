@@ -4,16 +4,16 @@ import { MobileNav } from './MobileNav';
 
 export const metadata = {
   metadataBase: new URL('https://wolfcreeklodge.us'),
-  title: 'Wolfridge Retreats — Ski-In/Ski-Out Mountain Homes in Winthrop, WA',
+  title: 'Wolfcreek Lodge — Ski-In/Ski-Out Mountain Homes in Winthrop, WA',
   description:
     'Ski-in/ski-out on the Methow Community Trail in Winthrop, Washington. Book the 3BR house, the 1BR apartment, or both together as a 4BR retreat. Winter 2026/27 rates and trail info.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Wolfridge Retreats — Ski-In/Ski-Out in the Methow Valley',
+    title: 'Wolfcreek Lodge — Ski-In/Ski-Out in the Methow Valley',
     description:
       'Two mountain homes at Wolfridge Resort, on the 200+ km Methow Trails network. Three bookable configurations, direct booking, no OTA.',
     url: 'https://wolfcreeklodge.us',
-    siteName: 'Wolfridge Retreats',
+    siteName: 'Wolfcreek Lodge',
     locale: 'en_US',
     type: 'website',
   },
@@ -74,7 +74,7 @@ function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>&copy; {new Date().getFullYear()} Wolfridge Retreats. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Wolfcreek Lodge. All rights reserved.</span>
           <span>Winthrop, WA &middot; Methow Valley</span>
         </div>
       </div>

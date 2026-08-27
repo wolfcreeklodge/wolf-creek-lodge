@@ -7,7 +7,7 @@ import { GallerySection } from '../components/PhotoGallery';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'The Area — Wolfridge Retreats',
+  title: 'The Area — Wolfcreek Lodge',
   description: 'Explore the Methow Valley and Winthrop, WA. World-class skiing, mountain biking, hiking, and more — right from your doorstep.',
 };
 

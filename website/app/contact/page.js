@@ -4,8 +4,8 @@ import { ContactForm } from './ContactForm';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Contact — Wolfridge Retreats',
-  description: 'Get in touch with Wolfridge Retreats. Inquiries about booking, retreats, and group stays in Winthrop, WA.',
+  title: 'Contact — Wolfcreek Lodge',
+  description: 'Get in touch with Wolfcreek Lodge. Inquiries about booking, retreats, and group stays in Winthrop, WA.',
 };
 
 export default async function ContactPage() {

@@ -1,7 +1,7 @@
 import AvailabilityCalendar from '../components/AvailabilityCalendar';
 
 export const metadata = {
-  title: 'Availability — Wolfridge Retreats',
+  title: 'Availability — Wolfcreek Lodge',
   description: 'Check real-time availability for The House, The Apartment, and The Retreat in Winthrop, WA.',
 };
 

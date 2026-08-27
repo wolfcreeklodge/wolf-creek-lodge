@@ -13,7 +13,7 @@ export async function generateMetadata({ params }) {
   const listing = await getListing(id);
   if (!listing) return { title: 'Not Found' };
   return {
-    title: `${listing.title} — Wolfridge Retreats`,
+    title: `${listing.title} — Wolfcreek Lodge`,
     description: listing.description.slice(0, 160),
   };
 }

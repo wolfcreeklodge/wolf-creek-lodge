@@ -9,7 +9,10 @@ An open-source, agent-driven vacation rental platform replacing Airbnb/VRBO depe
 physical properties at Wolfridge Resort in Winthrop, WA, sold as three bookable SKUs.
 
 **Owner:** Bo Pintea (@bopintea)
-**Public brand:** Wolfridge Retreats
+**Public brand:** Wolfcreek Lodge (the name on the sign at the house, and the name on the
+Google Business Profile as of 2026-08-26). Renamed from "Wolfridge Retreats", which was one
+word from **Wolfridge Resort** -- the neighbouring business, a claimed 3-star hotel listing.
+That resort is a separate company at 14 Lucky Louie Road; keep the two identities distinct.
 **Domain:** https://wolfcreeklodge.us
 **MCP endpoint:** https://mcp.wolfcreeklodge.us/sse
 **Repo:** https://github.com/wolfcreeklodge/wolf-creek-lodge

@@ -31,7 +31,7 @@ export async function GET() {
   const combo = listings.find((l) => l.isComboListing);
   const lines = [];
 
-  lines.push(`# ${siteConfig?.brandName || 'Wolfridge Retreats'}`);
+  lines.push(`# ${siteConfig?.brandName || 'Wolfcreek Lodge'}`);
   lines.push('');
   lines.push(
     '> Two mountain homes at Wolfridge Resort, 17 Lucky Louie Rd, Winthrop, WA 98862, in the',

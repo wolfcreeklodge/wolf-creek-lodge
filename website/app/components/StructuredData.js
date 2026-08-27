@@ -160,7 +160,7 @@ export default function StructuredData({ siteConfig, listings, calendar = [] }) 
     {
       '@type': 'LodgingBusiness',
       '@id': `${SITE}/#lodging`,
-      name: siteConfig?.brandName || 'Wolfridge Retreats',
+      name: siteConfig?.brandName || 'Wolfcreek Lodge',
       description:
         'Two mountain homes at Wolfridge Resort in Winthrop, Washington, bookable as three ' +
         'configurations: the 3-bedroom house, the 1-bedroom apartment, or both together as a ' +

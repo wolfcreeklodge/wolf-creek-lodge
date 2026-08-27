@@ -4,7 +4,7 @@ import { getSiteConfig } from '../../lib/data.js';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'About — Wolfridge Retreats',
+  title: 'About — Wolfcreek Lodge',
   description: 'Meet your hosts Bo and Svetlana. 14 years of Superhost hospitality in the Methow Valley.',
 };
 

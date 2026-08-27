@@ -9,7 +9,7 @@
 
 const photo = (src, alt = '', width = 1920, height = 1080) => ({ src, alt, width, height });
 
-export const heroPhoto = photo('/images/hero/entrance-porch.jpg', 'Wolfridge Retreats');
+export const heroPhoto = photo('/images/hero/entrance-porch.jpg', 'Wolfcreek Lodge');
 export const nightPhoto = photo('/images/hero/exterior-daytime.jpg', 'Property at night');
 export const entrancePhoto = photo('/images/hero/exterior-night.jpg', 'Entrance');
 
@@ -155,7 +155,7 @@ export const apartmentHero = photo(
   2560,
   1920
 );
-const comboHero = photo('/images/hero/exterior-daytime.jpg', 'Both units at Wolfridge Retreats');
+const comboHero = photo('/images/hero/exterior-daytime.jpg', 'Both units at Wolfcreek Lodge');
 
 const LISTING_PHOTOS = {
   'wolf-creek-lodge': {

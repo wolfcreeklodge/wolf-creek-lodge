@@ -6,7 +6,7 @@ import { getRateCalendar } from '../../lib/pricing.js';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Winter 2026/27 in the Methow Valley - Wolfridge Retreats',
+  title: 'Winter 2026/27 in the Methow Valley - Wolfcreek Lodge',
   description:
     'Ski-in/ski-out on the Methow Community Trail. Trail pass prices, Loup Loup, the winter drive from Seattle, the 2026/27 event calendar, and what each week of the season costs.',
 };
