@@ -8,6 +8,13 @@ Start at <https://business.google.com/create>.
 
 ---
 
+## No existing pin - you create, you do not claim
+
+Checked 2026-08-26: Google has **no pin at 17 Lucky Louie Rd**. That means the
+straightforward "Add your business" flow rather than the slower claim-and-dispute
+route over someone else's listing. Do not create a second listing later if one
+appears in the meantime; duplicates are the reliable way to get suspended.
+
 ## Two things to decide before you start
 
 **1. Eligibility - largely settled, in your favour.** Google Maps was checked
@@ -70,8 +77,22 @@ listing.
 | Secondary categories | `Holiday home`, `Lodging` |
 | Address | `17 Lucky Louie Rd, Winthrop, WA 98862` |
 | Phone | `+1 206-681-0117` |
-| Website | `https://wolfcreeklodge.us` |
-| Appointment link | `https://wolfcreeklodge.us/contact` |
+| Website | `https://wolfcreeklodge.us/?utm_source=google&utm_medium=organic&utm_campaign=gbp` |
+| Appointment link | `https://wolfcreeklodge.us/contact?utm_source=google&utm_medium=organic&utm_campaign=gbp-appointment` |
+
+### Why the URLs carry tags
+
+Linking the site from Maps is the main thing this profile is for. Tagging the link
+is what turns it from a link into a measurement: every visit arriving through the
+Maps listing lands in Umami under campaign `gbp`, so "did the profile generate
+traffic" becomes a number rather than an impression.
+
+Verified 2026-08-26 end to end: the tagged URL returns 200 with no redirect and no
+parameter stripping, and Umami recorded the campaign and `google.com` as referrer.
+
+Google displays the domain, not the query string, so the listing still reads
+`wolfcreeklodge.us`. Use the same three parameters, changing only `utm_campaign`,
+for every other directory listed in this file. That is what makes them comparable.
 
 Use the brand name exactly. Do not append keywords like "Winthrop Cabin Rental" -
 that is a guideline violation and a common cause of suspension.
