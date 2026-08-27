@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getSiteConfig } from '../../lib/data.js';
 import winter from '../../data/winter-2026-27.json';
-import { backDoorPhotos, widerValleyPhotos } from '../../lib/photos.js';
+import { backDoorPhotos, widerValleyPhotos, communityPhotos } from '../../lib/photos.js';
 import { GallerySection } from '../components/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
@@ -218,9 +218,14 @@ export default async function AreaPage() {
           <p className="section-label">Your Base</p>
           <h2 className="section-title">Wolfridge Resort Community</h2>
           <p className="section-subtitle">
-            Our properties are located within the Wolfridge Resort Community — a quiet, well-maintained
-            neighborhood with shared amenities.
+            Our properties sit inside the Wolfridge Resort Community, a quiet, well-kept
+            neighbourhood whose shared amenities come with the stay. The heated outdoor pool is
+            one of only a handful anywhere in the Methow Valley &mdash; the owner counts eight.
+            It runs Memorial Day to Labor Day. The hot tub, under its log shelter, is open all
+            year, which is the one you will care about in February.
           </p>
+
+          <GallerySection photos={communityPhotos} />
 
           <div className="area-info-card">
             <h3>{siteConfig.communityInfo.name}</h3>

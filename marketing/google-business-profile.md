@@ -10,13 +10,25 @@ Start at <https://business.google.com/create>.
 
 ## Two things to decide before you start
 
-**1. Eligibility.** Google's guidelines require a business to be able to receive
-customers at the listed address. A staffed hotel clearly qualifies; a self-managed
-vacation rental is a greyer case, and profiles that look like unstaffed short-term
-lets do sometimes get suspended. The defensible position here is that this is a
-lodging business at a real address where guests physically stay, listed under a
-vacation-rental category. Worth knowing the risk exists before investing in it,
-because a suspension is harder to undo than a fresh listing is to create.
+**1. Eligibility - largely settled, in your favour.** Google Maps was checked
+directly on 2026-08-26 and **individual cabins at this location already have their
+own map pins**: "Sleeping Wolf Cabin" and "Chickadee cabin" are separate places
+alongside the resort itself. So Google already accepts individually listed vacation
+units here. That is a much better position than the general guidance suggests, and
+it substantially de-risks the concern that a self-managed rental gets suspended.
+
+Two related observations from the same view:
+
+- **Wolfridge Resort is claimed and is a hotel-class listing.** 4.5 stars from 51
+  reviews, labelled "3-star hotel", carrying Google's "Check availability" and
+  "Compare prices" booking integration. That is a different and heavier listing type
+  than a vacation rental, run by the resort, and not something to imitate.
+- **"Wolf Ridge Resort" appears as a second, separate pin** from "Wolfridge Resort".
+  Whether that is a genuine duplicate on Google's side is worth a look, if only as a
+  live example of what fragmented listings do to a business.
+
+Follow the cabins' precedent, not the resort's: an individual vacation-rental place
+at your own address, under your own brand.
 
 **2. Verification.** Google usually verifies by postcard to the business address.
 Resolved: the owner is in Winthrop roughly one week in every month, so a postcard

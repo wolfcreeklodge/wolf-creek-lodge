@@ -85,6 +85,21 @@ export const backDoorPhotos = [
     2000, 2667),
 ];
 
+// Shared Wolfridge amenities. The site named the pool and the hot tub in text but
+// pictured neither, which for a seasonal outdoor pool in a valley that has very few
+// is a strange thing to leave to the imagination.
+export const communityPhotos = [
+  photo('/images/area/community-pool.jpg',
+    'The community outdoor pool, fenced and set among cedars, looking out to the resort lawn',
+    2000, 1500),
+  photo('/images/area/community-pool-lawn.jpg',
+    'The pool from the far side, with loungers, a shaded table and open lawn beyond the fence',
+    2000, 1500),
+  photo('/images/area/community-hot-tub.jpg',
+    'The shared hot tub under its log-framed shelter, set into a stone surround and open year round',
+    2000, 2667),
+];
+
 export const widerValleyPhotos = [
   photo('/images/area/creek-river-bluff.jpg',
     'Creek standing on a bluff high above a bend in the water, the valley opening out to dry hills beyond',
