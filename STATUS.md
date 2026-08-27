@@ -388,6 +388,20 @@ Server instructions now state the exclusion constraint and the winter road const
 
 ## Open tasks, most leverage first
 
+0. **TODAY (2026-08-26): turn off Cloudflare Email Address Obfuscation.** Cloudflare is rewriting
+   every email address in the site HTML into a `[email protected]` placeholder that only
+   JavaScript decodes. Email is now the primary booking channel, so anything without JS --
+   crawlers included -- cannot see the address. `/llms.txt` is unaffected, being plain text.
+   Fix: one.dash.cloudflare.com -> the `wolfcreeklodge.us` zone -> Scrape Shield -> Email
+   Address Obfuscation -> off. Then re-check:
+
+   ```bash
+   curl.exe -s https://wolfcreeklodge.us/contact | grep -c "__cf_email__"
+   ```
+
+   Zero means fixed. The trade being accepted is slightly easier address harvesting by
+   scrapers, against the address actually being visible on the page.
+
 1. **Recover the Pintea-Ubuntu disk.** A $15 USB-to-SATA/NVMe adapter. It holds the real photo
    components, the complete photo set, the original `.env`, and a 1011K `pg_dump` with booking and
    CRM history. Still the single highest-leverage action in this project.

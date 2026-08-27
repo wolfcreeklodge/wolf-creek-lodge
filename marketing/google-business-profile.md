@@ -18,10 +18,34 @@ lodging business at a real address where guests physically stay, listed under a
 vacation-rental category. Worth knowing the risk exists before investing in it,
 because a suspension is harder to undo than a fresh listing is to create.
 
-**2. Verification will be posted to Winthrop.** Google usually verifies by postcard
-to the business address - `17 Lucky Louie Rd` - and you are in Seattle. Either
-arrange for someone at Wolfridge to collect it, or request video verification,
-which is increasingly the default for lodging and avoids the problem entirely.
+**2. Verification.** Google usually verifies by postcard to the business address.
+Resolved: the owner is in Winthrop roughly one week in every month, so a postcard
+is collectable - it just gates the timeline on the next trip. Video verification is
+faster where offered and worth trying first.
+
+**3. Wolf Ridge Resort already exists as a business, at a different address.**
+The resort trades from `14 Lucky Louie Road` (phone 509.996.2828, sixty acres,
+log townhome cabins, its own booking site at wolfridge-resort.com). This property
+is `17 Lucky Louie Rd` - a privately owned home inside the same development, not
+part of the resort's rental programme. Different street number, so a profile here
+is **not** a duplicate of theirs and should not trip Google's duplicate detection.
+
+Two things follow. Keep the two identities clearly separate: do not describe the
+listing as "at Wolf Ridge Resort" in the business name or description in a way that
+reads as though it is the resort, because that invites both a Google merge and an
+annoyed neighbour. And expect Google to associate them by proximity regardless, so
+the photographs and description need to make obvious which building is which.
+
+Worth checking directly before you create anything, because it takes two minutes and
+changes the plan if wrong: open Google Maps, search "Wolf Ridge Resort Winthrop",
+and look at the listing. If it shows **"Claim this business"** it is unclaimed. If
+it shows owner-managed content - replies to reviews, posts, booking links - someone
+is actively running it. Either way, note whether Google has already attached any
+pin to 17 Lucky Louie Rd, which would need claiming rather than creating.
+
+Note the directories already disagree about the resort's own address: Yelp lists it
+at 412 Wolf Creek Rd. Inconsistent NAP is exactly the problem to avoid for this
+listing.
 
 ---
 
