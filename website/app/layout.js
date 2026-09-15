@@ -41,7 +41,7 @@ function Footer() {
         <div className="footer-grid">
           <div>
             <div className="footer-brand">
-              Wolfridge <span>Retreats</span>
+              Wolfcreek <span>Lodge</span>
             </div>
             <p className="footer-desc">
               Mountain homes on the Methow Trail in Winthrop, Washington.
@@ -98,7 +98,7 @@ export default function RootLayout({ children }) {
         <nav className="nav">
           <div className="nav-inner">
             <Link href="/" className="nav-brand">
-              Wolfridge <span>Retreats</span>
+              Wolfcreek <span>Lodge</span>
             </Link>
             <div className="nav-links nav-links--desktop">
               <NavLinks />

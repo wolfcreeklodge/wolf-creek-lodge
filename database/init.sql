@@ -245,7 +245,7 @@ CREATE INDEX idx_sessions_expire ON sessions(expire);
 -- ==========================================================================
 INSERT INTO site_config (brand_name, tagline, location, host, contact_email, contact_phone, community)
 VALUES (
-    'Wolfridge Retreats',
+    'Wolfcreek Lodge',
     'Mountain homes on the Methow Trail — Ski, Bike, Relax',
     'Winthrop, Washington',
     '{"name": "Bo", "coHost": "Svetlana Pintea", "superhost": true, "totalReviews": 46, "averageRating": 4.93, "yearsHosting": 14}',
