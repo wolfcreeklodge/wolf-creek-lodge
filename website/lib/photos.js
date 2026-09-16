@@ -48,7 +48,12 @@ export const libraryPhotos = [
 ];
 
 export const groundsPhotos = [
-  photo('/images/grounds/building-mountain.jpg', 'The house against the mountain'),
+  // Alt corrected 2026-09-15. The stub called this "The house against the
+  // mountain"; the frame is actually deep winter, which matters because the
+  // seasonal photo sets pick by alt text and this one was about to be served
+  // as autumn. If you reuse it, it is a winter photograph.
+  photo('/images/grounds/building-mountain.jpg',
+    'The meadow under deep snow in winter, seen past the corner of the house, with bare cottonwoods along the treeline and the forested ridge white behind'),
   photo('/images/grounds/meadow-sprinklers.jpg', 'Meadow in summer'),
   photo('/images/grounds/valley-landscape.jpg', 'Methow Valley landscape'),
   photo('/images/grounds/window-dusk-view.jpg', 'View from the window at dusk'),
@@ -116,6 +121,54 @@ export const widerValleyPhotos = [
   photo('/images/area/valley-from-ridge.jpg',
     'The forested valley floor and the river far below, framed by pines from high on a ridge',
     2000, 2667),
+  // Added 2026-09-15. The site claimed "hiking and wildlife viewing in the
+  // North Cascades" as a summer draw and pictured none of it. Same trip and
+  // same caveat as autumnPhotos: high country up Highway 20, not the property,
+  // and the lake is not named because nobody has confirmed which one it is.
+  photo('/images/area/alpine-lake.jpg',
+    'An alpine lake with a small wooded island at the head of a hanging valley, ringed by steep green slopes and scree, with row on row of North Cascades peaks beyond',
+    2560, 1920),
+];
+
+// ---------------------------------------------------------------------------
+// Autumn. Added 2026-09-15, closing the gap opened by the seasonal looks: until
+// now there was not one autumn frame on the site, so `fall` was dressed in
+// late-summer material. These are the real thing, shot 2023-09-30 at peak larch.
+//
+// Source: 'House Photos for Website/2026 Lana'. The two panoramas arrived as
+// iOS HEIC tiled at 48 and 64 references, which libheif refuses by default and
+// sharp cannot be told to allow; they were decoded out of band. The originals
+// are 12 MB and 16000 px wide and stay in OneDrive. Do NOT copy them into
+// public/ -- everything under it is served, which is the same mistake that made
+// the arrival map fetchable (Known broken 3). Regenerate from OneDrive, not
+// from these derivatives, so quality does not compound.
+//   larch-basin           <- 20230930_193434559_iOS.heic, whole frame
+//   larch-spires-panorama <- 20230930_195410754_iOS.heic, left 8944 px
+//   larch-valley          <- 20230930_193442754_iOS.heic, centre 8579 px
+// The two crops are deliberate: the slots they fill are 2.37:1 and 21/9, and an
+// uncropped 4.4:1 panorama would have been centre-cropped by object-fit into
+// something nobody chose.
+//
+// These are the high country, NOT the property, and the alt text says so on
+// purpose: the larch basin is a drive and a walk from the house, up Highway 20.
+// Nothing here should imply it is the back garden.
+//
+// UNCONFIRMED: the spires read like the Liberty Bell group above Washington
+// Pass and the lake in area/alpine-lake.jpg like Lake Ann on the Maple Pass
+// loop, but nobody has confirmed either, so no place name appears in any alt
+// text. Ask the owner before naming them -- a wrong landmark in alt text would
+// propagate straight into the answer engines this site is optimised for.
+// ---------------------------------------------------------------------------
+export const autumnPhotos = [
+  photo('/images/autumn/larch-basin.jpg',
+    'Larches in full autumn gold filling a high basin in the North Cascades, threaded with dark evergreens, under bare rock ridges holding the first snow of the season',
+    2560, 1920),
+  photo('/images/autumn/larch-spires-panorama.jpg',
+    'A wide view along a ridge of golden larches to a line of jagged rock spires, early snow lying in the gullies and cloud breaking over the range behind',
+    2560, 1080),
+  photo('/images/autumn/larch-valley.jpg',
+    'Golden larches running down a high valley in the North Cascades, seen from a rocky shoulder, with a snow-streaked peak standing over the head of it',
+    2560, 1099),
 ];
 
 // The building seen from the meadow. Added 2026-08-26: the site had plenty of
@@ -134,16 +187,64 @@ export const exteriorPhotos = [
   ),
 ];
 
+// ---------------------------------------------------------------------------
+// Apartment. Reworked 2026-09-15 from 'House Photos for Website/2026 Lana'.
+//
+// Two things were wrong here and both are fixed below.
+//
+// 1. Every dimension that was not explicitly passed fell back to the 1920x1080
+//    default, and six of them were wrong. exterior.jpg was the bad one: it is
+//    1600x2133 PORTRAIT and was declared landscape, so next/image reserved a
+//    box of the wrong shape for it. All ten now carry measured values.
+// 2. kitchen and living-room were the weakest frames in the set and better
+//    versions of both rooms existed. Swapped.
+//
+// New files rather than overwrites, per the 2026-08-26 precedent: the old
+// kitchen.jpg and living-room.jpg stay on disk, unreferenced. public/images is
+// gitignored, so an overwrite here is unrecoverable if OneDrive does not happen
+// to hold that exact frame.
+//
+// INTERIM: the three new frames came over WhatsApp and are capped at 1600 px
+// and ~200 KB by its recompression. That is parity with what they replace, not
+// an improvement in quality -- the win is composition. A fingerprint pass
+// showed the existing deck-panoramic, deck-winter and hero-living-area are
+// byte-identical to frames in this same batch, so the set has always been
+// WhatsApp material. Owner is shooting the property properly in the week of
+// 2026-09-21; replace these from camera originals when that lands.
+// ---------------------------------------------------------------------------
 export const apartmentPhotos = [
   photo('/images/apartment/living-dining.jpg', 'The apartment living and dining area, with the whitewashed shiplap partition and vaulted pine ceiling', 2000, 1500),
-  photo('/images/apartment/living-room.jpg', 'Apartment living room, with bookshelves and windows onto the valley'),
-  photo('/images/apartment/kitchen.jpg', 'Apartment kitchen, with patterned tile backsplash and full-size appliances'),
-  photo('/images/apartment/bedroom.jpg', 'Apartment bedroom, with a queen bed against the terracotta accent wall'),
+  // Replaces living-room.jpg, which showed the same room darker and from
+  // further back. This one carries the desk, which is a real amenity the
+  // listing advertises and had no photograph of since workspace.jpg was
+  // dropped on 2026-08-26 for being a close-up of a monitor.
+  photo('/images/apartment/living-room-workspace.jpg',
+    'The apartment living room: a black futon and ottoman on a woven rug, bookshelves and a cushioned window seat along one wall, and a desk with a large monitor under three windows looking out over the snow to the ridge',
+    1600, 1200),
+  // Replaces kitchen.jpg, which was shot at an angle with the corner of a
+  // table intruding. This is the full galley run, straight on.
+  photo('/images/apartment/kitchen-galley.jpg',
+    'The apartment kitchen: a single galley run under gloss white cabinets, with a green and white patterned tile backsplash, dishwasher, sink, induction cooktop, microwave and full-size fridge, below a terracotta wall and a pine ceiling',
+    1600, 1200),
+  photo('/images/apartment/bedroom.jpg', 'Apartment bedroom, with a queen bed against the terracotta accent wall', 1600, 1200),
   photo('/images/apartment/bathroom.jpg', 'Apartment bathroom, with a walk-in shower and a window onto the trees', 2000, 1500),
   photo('/images/apartment/entry.jpg', 'The apartment entry, under the cedar-slat wall of the covered walkway', 2000, 1500),
-  photo('/images/apartment/deck-panoramic.jpg', 'Panoramic view from the apartment deck'),
-  photo('/images/apartment/deck-winter.jpg', 'The apartment deck in winter, looking out over snow to the ridge'),
-  photo('/images/apartment/exterior.jpg', 'Apartment exterior'),
+  // Added deliberately. The apartment sits over the garage and is reached by a
+  // full flight of stairs; a guest who needs to know that should not have to
+  // infer it from the exterior shot.
+  photo('/images/apartment/stairs.jpg',
+    'The staircase down from the apartment to its own entrance, a straight flight between grey walls to a terracotta entry hall with a coat rack at the bottom',
+    1200, 1600),
+  // Both deck frames are winter; there is no summer one. Phrase this alt so it
+  // does not contain the literal 'deck in winter' -- seasons.js finds the
+  // winter hero by that substring and would otherwise match this one first.
+  photo('/images/apartment/deck-panoramic.jpg',
+    'The view from the apartment deck out over the snow-covered meadow to the treeline and the ridge beyond',
+    1600, 1200),
+  photo('/images/apartment/deck-winter.jpg', 'The apartment deck in winter, looking out over snow to the ridge', 1600, 1200),
+  photo('/images/apartment/exterior.jpg',
+    'The apartment from outside: the upper floor of the two-storey garage block, with its own covered deck above and the garage doors beneath',
+    1600, 2133),
 ];
 
 // Replaced 2026-08-25: the previous file was not the apartment. Source is
