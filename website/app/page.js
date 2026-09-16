@@ -104,8 +104,8 @@ export default async function Home() {
           does, which is the thing a first-time visitor is actually judging. */}
       <PhotoHero photo={PROPERTY_AERIAL}>
         <h1>
-          Wolfridge<br />
-          <em>Retreats</em>
+          Wolfcreek<br />
+          <em>Lodge</em>
         </h1>
         <p className="hero-tagline">{siteConfig.tagline}</p>
         <p className="hero-location">
