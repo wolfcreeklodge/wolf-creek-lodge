@@ -6,6 +6,8 @@ import {
   greatRoomPhotos, diningKitchenPhotos, bedroomPhotos, libraryPhotos,
   groundsPhotos, warmingHutPhotos, PROPERTY_AERIAL, apartmentHero,
 } from '../lib/photos.js';
+import { resolveSeason } from '../lib/season-server.js';
+import { SEASON_IDS, SEASONS } from '../lib/seasons.js';
 import PhotoHero from './components/PhotoHero';
 import FullBleedImage from './components/FullBleedImage';
 import { GallerySection } from './components/PhotoGallery';
@@ -85,6 +87,7 @@ function PropertyCard({ listing, photo }) {
 }
 
 export default async function Home() {
+  const { season } = resolveSeason();
   const [siteConfig, listings, calendar] = await Promise.all([
     getSiteConfig(),
     getListings(),
@@ -94,20 +97,30 @@ export default async function Home() {
   const house = listings.find((l) => l.id === 'wolf-creek-lodge');
   const apartment = listings.find((l) => l.id === 'wolf-creek-apartment');
   const communityAmenityIcons = ['&#127946;', '&#9832;', '&#9924;', '&#127758;', '&#127907;', '&#128692;'];
+  // Chosen season first, then the rest in calendar order. The other three stay
+  // on the page: someone shopping for August still wants to know the place
+  // works in February.
+  const orderedSeasons = [
+    season,
+    ...SEASON_IDS.filter((id) => id !== season.id).map((id) => SEASONS[id]),
+  ];
 
   return (
     <>
       <StructuredData siteConfig={siteConfig} listings={listings} calendar={calendar} />
 
-      {/* Hero -- aerial over the valley. Promoted from /area 2026-08-25:
-          it establishes the setting in a way no exterior shot of the building
+      {/* Hero -- seasonal. The photograph and the tagline both come from
+          lib/seasons.js, chosen by the visitor or by today's date. The spring
+          set keeps the aerial that was promoted here on 2026-08-25: it
+          establishes the setting in a way no exterior shot of the building
           does, which is the thing a first-time visitor is actually judging. */}
-      <PhotoHero photo={PROPERTY_AERIAL}>
+      <PhotoHero photo={season.hero || PROPERTY_AERIAL}>
+        <p className="hero-kicker">{season.kicker}</p>
         <h1>
           Wolfridge<br />
           <em>Retreats</em>
         </h1>
-        <p className="hero-tagline">{siteConfig.tagline}</p>
+        <p className="hero-tagline">{season.tagline || siteConfig.tagline}</p>
         <p className="hero-location">
           {siteConfig.location} &middot; Methow Valley
         </p>
@@ -126,21 +139,18 @@ export default async function Home() {
         </div>
       </PhotoHero>
 
-      {/* Winter season band. Seasonal, swap or remove after the spring thaw. */}
-      <section className="winter-band">
-        <div className="container winter-band-inner">
+      {/* Season band. Was hardcoded to winter and carried a note to swap it
+          after the thaw; it now follows the chosen season and needs no
+          seasonal maintenance. Copy lives in lib/seasons.js. */}
+      <section className="season-band">
+        <div className="container season-band-inner">
           <div>
-            <p className="section-label">Winter 2026/27</p>
-            <h2>The trail is groomed overnight. Your skis start at the door.</h2>
-            <p>
-              The Methow Community Trail crosses the property forty feet from the back door. Wolf
-              Ridge is a named trailhead on it, and it is the spine of
-              a 200+ km network (the largest in North America). Trail pass prices, the 2026/27 event
-              calendar, and the one thing Seattle guests get wrong about the winter drive.
-            </p>
+            <p className="section-label">{season.band.label}</p>
+            <h2>{season.band.title}</h2>
+            <p>{season.band.body}</p>
           </div>
-          <Link href="/winter" className="btn btn--primary btn--large">
-            Plan a winter stay
+          <Link href={season.band.ctaHref} className="btn btn--primary btn--large">
+            {season.band.ctaLabel}
           </Link>
         </div>
       </section>
@@ -207,8 +217,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Night mood divider */}
-      <FullBleedImage photo={nightPhoto} className="full-bleed--night" />
+      {/* Mood divider. Seasonal: the hot tub in winter, the pool in summer,
+          the river in spring. Falls back to the night shot. */}
+      <FullBleedImage photo={season.mood || nightPhoto} className="full-bleed--night" />
 
       {/* Other Properties */}
       <section className="section section--alt">
@@ -248,34 +259,26 @@ export default async function Home() {
           <p className="section-subtitle">
             Set in the heart of the Methow Valley with mountain views in every direction.
           </p>
+          {/* Three frames: one lead, two secondary. Seasonal, so a winter
+              visitor is not sold a summer meadow. Falls back to the
+              year-round grounds set if a season is short of photographs. */}
           <div className="grounds-grid">
-            <div className="grounds-lead">
-              <Image
-                src={groundsPhotos[0].src}
-                alt={groundsPhotos[0].alt}
-                width={groundsPhotos[0].width}
-                height={groundsPhotos[0].height}
-                sizes="100vw"
-              />
-            </div>
-            <div className="grounds-secondary">
-              <Image
-                src={groundsPhotos[1].src}
-                alt={groundsPhotos[1].alt}
-                width={groundsPhotos[1].width}
-                height={groundsPhotos[1].height}
-                sizes="(max-width: 640px) 100vw, 50vw"
-              />
-            </div>
-            <div className="grounds-secondary">
-              <Image
-                src={groundsPhotos[2].src}
-                alt={groundsPhotos[2].alt}
-                width={groundsPhotos[2].width}
-                height={groundsPhotos[2].height}
-                sizes="(max-width: 640px) 100vw, 50vw"
-              />
-            </div>
+            {(season.gallery?.length === 3 ? season.gallery : groundsPhotos.slice(0, 3)).map(
+              (photo, i) => (
+                <div
+                  key={photo.src}
+                  className={i === 0 ? 'grounds-lead' : 'grounds-secondary'}
+                >
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt}
+                    width={photo.width}
+                    height={photo.height}
+                    sizes={i === 0 ? '100vw' : '(max-width: 640px) 100vw, 50vw'}
+                  />
+                </div>
+              )
+            )}
           </div>
         </div>
       </section>
@@ -322,47 +325,52 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Seasonal Activities Preview. Winter leads while winter is the season. */}
+      {/* Seasonal activities. The chosen season leads with its full list; the
+          other three stay visible in short form, because somebody shopping for
+          August still wants to know the place works in February. */}
       <section className="section section--alt">
         <div className="container">
           <p className="section-label">What To Do</p>
-          <h2 className="section-title">Built For Winter, Good All Year</h2>
+          <h2 className="section-title">Four Valleys, One Address</h2>
           <p className="section-subtitle">
-            The valley earns its reputation between December and March. The rest of the year is
-            the bonus.
+            Winter is what the Methow is known for. It is not the only reason to come, and the
+            three quiet seasons are the cheap ones.
           </p>
-          <div className="property-grid">
-            <div className="season-card season-card--winter">
-              <div className="season-icon">&#10052;</div>
-              <h3>Winter</h3>
-              <ul>
-                <li>Methow Community Trail crosses the property, 40 ft from the back door</li>
-                <li>200+ km of trails, the largest nordic network in North America</li>
-                <li>Loup Loup Ski Bowl for downhill, about 30 minutes away</li>
-                <li>Snowshoe and fat bike routes on the same network</li>
-                <li>Year-round hot tub for the end of the day</li>
-              </ul>
-              <div className="mt-2">
-                <Link href="/winter" className="btn btn--secondary btn--small">
-                  Winter guide
-                </Link>
-              </div>
-            </div>
-            <div className="season-card season-card--summer">
-              <div className="season-icon">&#9728;</div>
-              <h3>Summer</h3>
-              <ul>
-                <li>The same trails become a mountain bike network</li>
-                <li>Hiking and wildlife viewing in the North Cascades</li>
-                <li>Methow River access, a short walk away</li>
-                <li>Heated community pool, Memorial Day to Labor Day</li>
-              </ul>
-              <div className="mt-2">
-                <Link href="/area" className="btn btn--secondary btn--small">
-                  The area
-                </Link>
-              </div>
-            </div>
+          <div className="season-grid">
+            {orderedSeasons.map((s, i) => {
+              const isActive = i === 0;
+              return (
+                <div
+                  key={s.id}
+                  className={`season-card season-card--${s.id} ${isActive ? 'is-active' : ''}`}
+                >
+                  <div
+                    className="season-icon"
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: s.icon }}
+                  />
+                  <h3>{s.label}</h3>
+                  <p className="season-card__months">{s.months}</p>
+                  {isActive ? (
+                    <>
+                      <ul>
+                        {s.activities.map((activity) => (
+                          <li key={activity}>{activity}</li>
+                        ))}
+                      </ul>
+                      <p className="season-card__note">{s.note}</p>
+                      <div className="mt-2">
+                        <Link href={s.band.ctaHref} className="btn btn--secondary btn--small">
+                          {s.band.ctaLabel}
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="season-card__hook">{s.hook}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

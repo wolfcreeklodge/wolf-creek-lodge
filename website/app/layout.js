@@ -2,6 +2,13 @@ import './globals.css';
 import Link from 'next/link';
 import { MobileNav } from './MobileNav';
 import { BookingTracker } from './components/BookingTracker';
+import {
+  SeasonDialog,
+  SeasonProvider,
+  SeasonTrigger,
+} from './components/SeasonPicker';
+import { resolveSeason } from '../lib/season-server.js';
+import { SEASON_COOKIE, SEASON_COOKIE_MAX_AGE, seasonChoices } from '../lib/seasons.js';
 
 export const metadata = {
   metadataBase: new URL('https://wolfcreeklodge.us'),
@@ -84,8 +91,13 @@ function Footer() {
 }
 
 export default function RootLayout({ children }) {
+  // data-season is set on the server so the palette is already correct in the
+  // first byte of HTML. No flash, and a crawler sees whatever season the
+  // valley is actually in today.
+  const { season, chosen } = resolveSeason();
+
   return (
-    <html lang="en">
+    <html lang="en" data-season={season.id}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -95,21 +107,34 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <nav className="nav">
-          <div className="nav-inner">
-            <Link href="/" className="nav-brand">
-              Wolfridge <span>Retreats</span>
-            </Link>
-            <div className="nav-links nav-links--desktop">
-              <NavLinks />
+        <SeasonProvider
+          choices={seasonChoices()}
+          activeId={season.id}
+          chosen={chosen}
+          cookieName={SEASON_COOKIE}
+          cookieMaxAge={SEASON_COOKIE_MAX_AGE}
+        >
+          <nav className="nav">
+            <div className="nav-inner">
+              <Link href="/" className="nav-brand">
+                Wolfridge <span>Retreats</span>
+              </Link>
+              <div className="nav-links nav-links--desktop">
+                <NavLinks />
+                <SeasonTrigger />
+              </div>
+              <MobileNav>
+                <NavLinks />
+                <SeasonTrigger />
+              </MobileNav>
             </div>
-            <MobileNav>
-              <NavLinks />
-            </MobileNav>
-          </div>
-        </nav>
-        <main>{children}</main>
-        <Footer />
+          </nav>
+          <main>{children}</main>
+          <Footer />
+          {/* Rendered here, not in the nav: .nav sets backdrop-filter, which
+              makes it the containing block for fixed-position descendants. */}
+          <SeasonDialog />
+        </SeasonProvider>
         {/* Self-hosted Umami, proxied through /stats so it is not on any
             tracker blocklist. No cookies, no cross-site identifiers, so no
             consent banner is required. defer keeps it off the critical path. */}
