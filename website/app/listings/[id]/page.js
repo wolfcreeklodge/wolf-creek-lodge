@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { getListing, getSiteConfig } from '../../../lib/data.js';
+import { getListing, getListings, getSiteConfig } from '../../../lib/data.js';
 import { toDisplayRate } from '../../../lib/pricing.js';
+import { bookingFormEnabled } from '../../../lib/booking.js';
+import BookingRequestForm from '../../components/BookingRequestForm';
 import { getListingPhotos } from '../../../lib/photos.js';
 import PhotoHero from '../../components/PhotoHero';
 import { HouseFloorPlan, ApartmentFloorPlan } from '../../components/FloorPlan';
@@ -52,7 +54,19 @@ function HighlightIcon({ icon }) {
 
 export default async function ListingPage({ params }) {
   const { id } = await params;
-  const [listing, siteConfig] = await Promise.all([getListing(id), getSiteConfig()]);
+  const [listing, siteConfig, allListings] = await Promise.all([
+    getListing(id),
+    getSiteConfig(),
+    getListings(),
+  ]);
+  const showRequestForm = bookingFormEnabled();
+  // All three, not just this one: if these dates are taken here, the form
+  // offers whichever of the other two is free, and has to be able to switch.
+  const formProperties = allListings.map((l) => ({
+    id: l.id,
+    title: l.title,
+    maxGuests: l.capacity.maxGuests,
+  }));
 
   if (!listing) {
     return (
@@ -358,16 +372,32 @@ Thanks!`
               )}
             </div>
 
-            <div className="booking-panel__contact">
+            <div className="booking-panel__contact" id="request-dates">
               <h3>Reserve your dates</h3>
-              <p className="booking-panel__lead">
-                We book by email. Send your dates and party size and you will hear back from
-                Bo directly &mdash; no account, no platform in the middle.
-              </p>
+              {showRequestForm ? (
+                <>
+                  <p className="booking-panel__lead">
+                    Pick your dates and the calendar answers straight away. You will hear back
+                    from Bo directly &mdash; no account, no platform in the middle.
+                  </p>
+                  <BookingRequestForm
+                    properties={formProperties}
+                    defaultPropertyId={id}
+                    contactEmail={bookingEmail}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="booking-panel__lead">
+                    We book by email. Send your dates and party size and you will hear back from
+                    Bo directly &mdash; no account, no platform in the middle.
+                  </p>
 
-              <a href={bookingMailto} className="btn btn--primary btn--large booking-cta">
-                Email to Book
-              </a>
+                  <a href={bookingMailto} className="btn btn--primary btn--large booking-cta">
+                    Email to Book
+                  </a>
+                </>
+              )}
 
               <p className="booking-panel__phone">
                 Prefer to talk? Call or text <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>.{' '}
@@ -425,9 +455,15 @@ Thanks!`
             place &mdash; taxes included, no booking fees.
           </p>
           <div className="cta-buttons">
-            <a href={bookingMailto} className="btn btn--primary btn--large">
-              Email to Book
-            </a>
+            {showRequestForm ? (
+              <a href="#request-dates" className="btn btn--primary btn--large">
+                Request Your Dates
+              </a>
+            ) : (
+              <a href={bookingMailto} className="btn btn--primary btn--large">
+                Email to Book
+              </a>
+            )}
             <Link href="/availability" className="btn btn--secondary btn--large">
               Check Availability
             </Link>

@@ -3281,6 +3281,190 @@ h1, h2, h3, h4 {
   color: var(--color-saddle);
 }
 
+/* -- Booking request form -------------------------------------------------- */
+/* Sits in the right-hand column of .booking-panel, roughly 430px wide on a
+   laptop. Rows are wrapping flex rather than a grid so the two dates and the
+   guest count share a line there and stack cleanly on a phone. */
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.booking-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.booking-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-saddle);
+}
+
+.booking-form__field--wide { flex-basis: 100%; }
+.booking-form__field--narrow { flex: 0 1 80px; }
+
+.booking-form__field em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--color-rawhide);
+}
+
+.booking-form__field input,
+.booking-form__field select,
+.booking-form__field textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--color-timber);
+  background: var(--color-snow);
+  border: 1px solid var(--color-wheat);
+  border-radius: var(--radius-sm);
+}
+
+.booking-form__field textarea { resize: vertical; }
+
+.booking-form__field input:focus,
+.booking-form__field select:focus,
+.booking-form__field textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
+}
+
+/* The calendar's answer. Reserves a line so the form does not jump when it
+   arrives. */
+.booking-form__status {
+  min-height: 1.6rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.booking-form__hint { color: var(--color-rawhide); }
+
+.booking-form__ok {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__warn {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-ember);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__taken {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-gold);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__alts {
+  list-style: none;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.booking-form__alts button {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-accent-hover);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Honeypot. Off-screen rather than display:none, because some bots skip
+   fields that are not rendered at all. */
+.booking-form__hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.booking-form__consent {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-saddle);
+  cursor: pointer;
+}
+
+.booking-form__consent input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  accent-color: var(--color-accent-deep);
+}
+
+.booking-form__submit {
+  width: 100%;
+  text-align: center;
+}
+
+.booking-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.booking-form__fine {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--color-rawhide);
+}
+
+.booking-form__fine a {
+  color: var(--color-accent-hover);
+  font-weight: 600;
+}
+
+.booking-form__done {
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-parchment);
+}
+
+.booking-form__done h3 { margin-bottom: 0.4rem; }
+
+.booking-form__done p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--color-saddle);
+}
+
+.booking-form__done .booking-form__ref {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-rawhide);
+}
+
 .cta-phone {
   margin-top: 1rem;
   font-size: 0.88rem;
