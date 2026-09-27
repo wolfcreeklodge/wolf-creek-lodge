@@ -288,7 +288,7 @@ VALUES
     'wolf-creek-apartment',
     'https://www.airbnb.com/rooms/873890683808273374',
     'listed',
-    'Bright 1BR Retreat with On Methow Trail Ski-In/Out',
+    'Bright 1BR Retreat on Methow Trail Ski-In/Out',
     'Entire rental unit in Winthrop, Washington',
     'Wake up to ridge and open-field views from this new, high-ceiling 1BR at Wolfridge. You''re on the Methow Community Ski Trail, which becomes part of the Methow Valley Trails bike network in summer. Quiet, bright, and set up for work and play: fully equipped kitchenette, projector for movie nights, dedicated desk with external monitor and inspiring view, high-speed Wi-Fi, and air conditioning. Seasonal pool, year-round hot tub, playground, and the Methow River are a short walk.',
     'Apartment', 'Rental unit', 'Entire place', NULL, NULL,
