@@ -30,7 +30,6 @@ import {
   backDoorPhotos,
   communityPhotos,
   exteriorPhotos,
-  greatRoomPhotos,
   groundsPhotos,
   heroPhoto,
   warmingHutPhotos,

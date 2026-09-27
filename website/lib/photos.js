@@ -13,10 +13,28 @@ export const heroPhoto = photo('/images/hero/entrance-porch.jpg', 'Wolfcreek Lod
 export const nightPhoto = photo('/images/hero/exterior-daytime.jpg', 'Property at night');
 export const entrancePhoto = photo('/images/hero/exterior-night.jpg', 'Entrance');
 
+// Replaced 2026-09-27 with the owner's 2026-09-26 shoot: camera originals at
+// 5712x4284, where the three frames they replace were 1920x1280 and dark, shot
+// into winter light. They were also declared 1920x1080 via the default, which
+// was wrong. Old files remain on disk, unreferenced, per the 2026-08-26
+// precedent.
+//
+// ORDER MATTERS: greatRoomPhotos[0] is also the Featured Retreat card on the
+// homepage (page.js), so the strongest frame of the room goes first.
+//
+// The replaced frames were the only interiors showing snow through the
+// windows. If a winter-specific great room is ever wanted, fireplace-wall.jpg,
+// living-room-windows.jpg and panoramic-view.jpg are still on disk.
 export const greatRoomPhotos = [
-  photo('/images/great-room/fireplace-wall.jpg', 'Great room fireplace wall'),
-  photo('/images/great-room/living-room-windows.jpg', 'Living room windows'),
-  photo('/images/great-room/panoramic-view.jpg', 'Panoramic valley view from the great room'),
+  photo('/images/great-room/window-wall-meadow.jpg',
+    'The great room in afternoon sun: two dark leather sofas and a pair of armchairs facing a wall of tall timber-framed windows onto the green meadow and the forested hillside beyond, with a carved antique piano and a skeleton wall clock to one side',
+    2560, 1920),
+  photo('/images/great-room/fireplace-feature-wall.jpg',
+    'The fireplace wall: horizontal cedar slats rising to the pine ceiling around a long linear fireplace under a floating timber mantel, with a swivel armchair and leather sofas on a patterned rug',
+    2560, 1920),
+  photo('/images/great-room/open-plan-dining-kitchen.jpg',
+    'The open plan from the living area: a live-edge dining table under a beam pendant light by the meadow windows, running into the kitchen with maple cabinets, dark counters and a farmhouse sink',
+    2560, 1920),
   photo('/images/great-room/piano.jpg',
     'An antique carved upright piano in the great room, below a station clock, beside a window onto the meadow',
     2000, 3556),
@@ -127,6 +145,21 @@ export const widerValleyPhotos = [
   // and the lake is not named because nobody has confirmed which one it is.
   photo('/images/area/alpine-lake.jpg',
     'An alpine lake with a small wooded island at the head of a hanging valley, ringed by steep green slopes and scree, with row on row of North Cascades peaks beyond',
+    2560, 1920),
+  // Added 2026-09-27, from the owner's 2026-09-26 shoot. The summer and fall
+  // copy both sell Highway 20 as the scenic way in, and this is the first
+  // photograph of the drive. Same naming caveat as the lake: unconfirmed, so
+  // "a highway", not a route number or a pass.
+  //
+  // KNOWN FLAW: a faint rainbow lens flare runs diagonally through the left
+  // half of the frame. Kept because nothing else shows the road; replace it
+  // the next time someone is up there with the sun behind them.
+  //
+  // This takes the set from six to seven, which switches on GallerySection's
+  // odd-count lead: creek-river-bluff.jpg, already 16:9, becomes the
+  // full-width frame.
+  photo('/images/area/highway-pass-switchback.jpg',
+    'A highway switchbacking far below a high ridge dusted with early snow, dark forest filling the valley floor under a clear sky',
     2560, 1920),
 ];
 
