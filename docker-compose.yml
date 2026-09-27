@@ -38,6 +38,10 @@ services:
       WEBSITE_AUTH_SECRET: ${WEBSITE_AUTH_SECRET:-change_me_website_auth_secret_32ch}
       ADMIN_ALLOWED_EMAILS: ${CRM_ALLOWED_EMAILS:-wolfcreeklodge@outlook.com}
       WEBSITE_REDIRECT_URI: ${WEBSITE_REDIRECT_URI:-https://wolfcreeklodge.us/api/auth/callback}
+      # Shows the booking request form on the listing pages in place of
+      # "Email to Book". Off until email-send has a real provider; see
+      # bookingFormEnabled() in website/lib/booking.js for why.
+      BOOKING_FORM_ENABLED: ${BOOKING_FORM_ENABLED:-false}
     depends_on:
       database:
         condition: service_healthy
@@ -104,6 +108,29 @@ services:
       MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
       MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
       MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # Drains the outbound_emails outbox. The website and the CRM only queue
+  # mail; this is the one container that sends it, so it is the only one
+  # that ever holds a provider key. EMAIL_PROVIDER defaults to "log", which
+  # renders and records every message without sending anything.
+  email-send:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.email-send
+    container_name: wcl-email-send
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-log}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Wolfcreek Lodge <stay@wolfcreeklodge.us>}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-wolfcreeklodge@outlook.com}
+      SITE_URL: ${SITE_URL:-https://wolfcreeklodge.us}
+      CRM_URL: ${CRM_URL:-https://crm.wolfcreeklodge.us}
+      POSTAL_ADDRESS: ${POSTAL_ADDRESS:-17 Lucky Louie Rd, Winthrop, WA 98862}
     depends_on:
       database:
         condition: service_healthy

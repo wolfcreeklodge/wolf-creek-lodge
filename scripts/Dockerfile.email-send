@@ -1,0 +1,8 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY send-email.mjs email-templates.mjs ./
+# Every 30 seconds, not every 15 minutes like the sync workers: a guest who
+# has just sent a request is waiting for the acknowledgement.
+CMD ["sh", "-c", "while true; do node send-email.mjs; sleep 30; done"]
