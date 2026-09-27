@@ -8,6 +8,9 @@ import GuestDetail from './pages/GuestDetail';
 import ReservationList from './pages/ReservationList';
 import ReservationDetail from './pages/ReservationDetail';
 import ImportWizard from './pages/ImportWizard';
+import BookingRequests from './pages/BookingRequests';
+import Promotions from './pages/Promotions';
+import Outbox from './pages/Outbox';
 
 function ProtectedRoute({ user, loading, children }) {
   const location = useLocation();
@@ -91,6 +94,30 @@ export default function App() {
         element={
           <ProtectedRoute user={user} loading={loading}>
             <ReservationDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/requests"
+        element={
+          <ProtectedRoute user={user} loading={loading}>
+            <BookingRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/promotions"
+        element={
+          <ProtectedRoute user={user} loading={loading}>
+            <Promotions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/outbox"
+        element={
+          <ProtectedRoute user={user} loading={loading}>
+            <Outbox />
           </ProtectedRoute>
         }
       />

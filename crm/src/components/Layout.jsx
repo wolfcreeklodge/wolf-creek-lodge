@@ -1,6 +1,20 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../hooks/useApi';
+
+// Requests waiting on Bo, as a badge on the nav. Until email is live this is
+// the only signal that a guest has asked for dates, so it is re-read on every
+// page change rather than once.
+function useRequestBadge() {
+  const location = useLocation();
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    api.get('/api/booking-requests/counts')
+      .then((c) => setN((c?.pending || 0) + (c?.waitlisted_now_available || 0)))
+      .catch(() => setN(0));
+  }, [location.pathname]);
+  return n;
+}
 
 const navItems = [
   {
@@ -31,6 +45,33 @@ const navItems = [
     ),
   },
   {
+    to: '/requests',
+    label: 'Requests & Waitlist',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    to: '/promotions',
+    label: 'Promotions',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/outbox',
+    label: 'Outbox',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
     to: '/import',
     label: 'Import',
     icon: (
@@ -53,6 +94,7 @@ const navItems = [
 
 export default function Layout({ user, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const requestBadge = useRequestBadge();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -110,6 +152,14 @@ export default function Layout({ user, children }) {
             >
               {item.icon}
               <span>{item.label}</span>
+              {item.to === '/requests' && requestBadge > 0 && (
+                <span
+                  className="ml-auto min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-ember text-white text-xs font-bold text-center"
+                  title="Requests waiting on you, plus waitlisted dates that are free now"
+                >
+                  {requestBadge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

@@ -255,8 +255,18 @@ router.put('/:id', async (req, res) => {
 
     const allowedFields = [
       'first_name', 'last_name', 'email', 'phone', 'city', 'state_province',
-      'country', 'instagram', 'whatsapp', 'facebook', 'linkedin', 'source', 'tags', 'notes'
+      'country', 'instagram', 'whatsapp', 'facebook', 'linkedin', 'source', 'tags', 'notes',
+      'marketing_consent',
     ];
+
+    // Promotions go only to 'opted_in'. Setting it here is Bo recording that
+    // a guest agreed -- in person, by email -- so it is stamped with when and
+    // where it came from, the same as a form opt-in or an unsubscribe.
+    const CONSENT_VALUES = ['unknown', 'opted_in', 'opted_out'];
+    if (req.body.marketing_consent !== undefined
+        && !CONSENT_VALUES.includes(req.body.marketing_consent)) {
+      return res.status(400).json({ error: `marketing_consent must be one of ${CONSENT_VALUES.join(', ')}` });
+    }
 
     const updates = [];
     const values = [];
@@ -280,6 +290,10 @@ router.put('/:id', async (req, res) => {
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    if (diff.marketing_consent) {
+      updates.push('marketing_consent_at = now()', "marketing_consent_source = 'crm'");
     }
 
     updates.push('updated_at = now()');
