@@ -1,6 +1,57 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-09-15 (**The site has four seasonal looks and asks the visitor which one.**)
+**Last updated:** 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
+
+A guest booked by email without looking at the calendar, which is what the mailto: link invited. The
+site now has a real request form: pick dates and it answers at once -- open or taken, the direct
+price, the minimum stay, and if the place is taken, which of the other two is free instead. Taken
+dates can still be requested; they go on a **waitlist**, which in the CRM is simply the requests
+whose status is `waitlisted`. When a waitlisted stay's dates come free, the CRM flags it and Bo can
+email the guest in one click. **Promotions** are drafted and sent from the CRM, only to guests who
+opted in, each with an unsubscribe link and the postal address added by the sender.
+
+**The form is OFF on the live site** (`BOOKING_FORM_ENABLED=false`), and that is deliberate. Nothing
+in this system could send email -- the Microsoft token has `Mail.Read` only -- so every message goes
+through a new outbox (`outbound_emails`) drained by a new worker, `wcl-email-send`, which runs in
+`EMAIL_PROVIDER=log` mode until a provider is set up: it renders and records, and sends nothing. With
+the form on in that state, a guest's request would reach the CRM and nowhere else -- no email to
+them, none to Bo. "Email to Book" goes straight to the inbox, so it stays until the form can do at
+least as well. The go-live steps are the first open task.
+
+Design decisions worth knowing before changing any of it:
+
+- **A request does not hold dates.** It is not a reservation and the overlap triggers never see it.
+  Confirming in the CRM INSERTs a real reservation, and that INSERT is what the triggers police: a
+  second confirmation for the same dates is refused with a 409, tested.
+- **One definition of "free"**: `stay_is_available()` and `blocking_property_ids()` in
+  `database/07-booking-requests.sql`. The form, the CRM and the waitlist flag all call it. The
+  overlap triggers and `/api/availability` still carry their own copies of the same rule; they
+  agree, and they could adopt the function.
+- **Waitlisted guests are never notified automatically.** The iCal feed flickers -- Airbnb's rolling
+  availability window cancels and recreates a block every day, visible as the run of one-night
+  cancelled Retreat rows in `reservations` -- and an automatic "your dates are free" on a flicker
+  would promise something false. Bo clicks.
+- **Marketing consent has three states**, and `unknown` (the default) is not permission. **All 8 real
+  guests with an address are `unknown`, so the promotion list is empty today.** It fills as new guests
+  tick the box on the form, or as Bo marks past guests who have agreed on their CRM guest page.
+- **The public form never overwrites an existing guest.** It matches by address and links, and only
+  ever sets consent -- otherwise anyone who knew an address could rewrite that guest's record.
+- **Spam defences, no CAPTCHA**: a honeypot, five requests per client address per hour (HMAC of the
+  address, never stored raw), and server-side validation of every field. Honeypot hits are logged
+  without personal data, because a false positive is silent. The honeypot was first labelled
+  "Company", which Chrome autofills from a saved address profile; it is now labelled with nothing
+  autofill recognises. Cloudflare Turnstile is the next step if spam gets through.
+
+Tested end to end against the live database with `@example.com` data, then removed: 10 live-check
+cases, 7 submission cases, returning-guest matching, the rate limit, both confirm paths including the
+trigger refusal, offer and all status transitions, the promotion count guard, and the full
+unsubscribe path including a link scanner's GET. The confirm and offer tests used past dates, so no
+test reservation could reach Airbnb through the iCal export. A database dump taken just before the
+migration is in `C:\wcl-assets\db\`.
+
+---
+
+**Prior entry (2026-09-15):** (**The site has four seasonal looks and asks the visitor which one.**)
 
 The homepage was hardcoded to winter -- winter band, winter-first activity cards, one fixed hero --
 with a code comment telling whoever came next to swap it after the thaw. It is now driven by
@@ -190,6 +241,7 @@ All via `docker-compose.yml` at project root. `docker compose up -d` brings up e
 | `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | Express + Vite SPA. Published at `crm.wolfcreeklodge.us`. Sign-in works only through the tunnel: the app sends one redirect URI and it is the https one. |
 | `wcl-ical-sync` | `./scripts` (`sync-ical.mjs`) | none | pulls Airbnb iCal into `reservations` |
 | `wcl-email-sync` | `./scripts` (`Dockerfile.email-sync`) | none | Microsoft Graph -> `emails` |
+| `wcl-email-send` | `./scripts` (`Dockerfile.email-send`) | none | **new 2026-09-27.** Drains `outbound_emails` every 30s. `EMAIL_PROVIDER=log` (default) renders and records without sending; `resend` sends. The only container that holds a provider key. |
 | `wcl-cloudflared` | `cloudflare/cloudflared:latest` | none | mounts `./cloudflared` read-only |
 
 ### Cloudflare tunnel
@@ -219,6 +271,7 @@ Applied automatically on first compose-up via `/docker-entrypoint-initdb.d/`:
 | `database/03-rate-calendar.sql` | `rate_seasons`, `property_rates` + `resolve_season`, `is_weekend_night`, `resolve_nightly_rate`, `quote_stay`, `required_min_nights` | **yes, 2026-08-25** |
 | `database/04-winter-2026-27-rates.sql` | the winter ladder + minNights and beds fixes | **yes, 2026-08-25** (11 seasons, 33 rate rows) |
 | `database/05-arrival-tokens.sql` | `reservations.arrival_token` + unique index, for the private arrival page | **yes, 2026-08-25** |
+| `database/07-booking-requests.sql` | `booking_requests`, `promotions`, `outbound_emails`; guest `marketing_consent` + `unsubscribe_token`; `stay_is_available()`, `blocking_property_ids()`. Additive, idempotent | **yes, 2026-09-27** |
 
 Both applied 2026-08-25. The ladder went in **as written**, on the owner's call, without the
 occupancy check the decision rule below asks for: `reservations` is empty on this database, so that
@@ -249,6 +302,8 @@ falls straight back to flat pricing.
 | `/llms.txt` | dynamic | **new.** Agent brief, generated from the same rows the site reads |
 | `/robots.txt`, `/sitemap.xml` | **new** | |
 | `/api/availability`, `/api/auth/[action]`, `/api/admin/bookings`, `/api/admin/blocks`, `/api/ical/[token]` | route handlers | |
+| `/api/booking-requests` (POST), `/api/booking-requests/check` (GET) | route handlers | **new 2026-09-27.** The request form's write and its live availability check. Live whether or not the form is shown. |
+| `/unsubscribe`, `/api/unsubscribe` (POST only) | dynamic | **new 2026-09-27.** Confirm-then-post, never unsubscribe-on-GET, because mail scanners open every link. The POST also serves RFC 8058 one-click. `noindex`. |
 
 All pages carry a schema.org `@graph`: `LodgingBusiness` + three `VacationRental` nodes with 11
 seasonal `Offer` nodes each (live now that `03`/`04` are applied) and `eligibleQuantity` minimum stay. The
@@ -497,6 +552,23 @@ Server instructions now state the exclusion constraint and the winter road const
 ---
 
 ## Open tasks, most leverage first
+
+00. **Switch on booking requests (2026-09-27).** Built and tested; waiting on an email provider.
+    Until one exists, the form stays off, because a request would reach the CRM and nobody else.
+    1. Create a Resend account (resend.com; the free tier covers this volume) and verify
+       `wolfcreeklodge.us`. It gives SPF and DKIM records to add in Cloudflare DNS. A subdomain such
+       as `mail.wolfcreeklodge.us` keeps any sending reputation off the root domain.
+    2. In `.env`: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY=...`, and `EMAIL_FROM` on the verified
+       domain, e.g. `Wolfcreek Lodge <stay@mail.wolfcreeklodge.us>`. Reply-To stays the Outlook
+       mailbox, so replies land where `sync-email` already reads them.
+    3. `docker compose up -d --force-recreate email-send`, then send a test promotion from the CRM
+       and check it arrives -- and lands in the inbox, not spam.
+    4. `BOOKING_FORM_ENABLED=true` in `.env`, then `docker compose up -d --force-recreate website`.
+    `sendViaResend()` in `scripts/send-email.mjs` follows Resend's documented REST shape but has
+    never run against the live API -- step 3 is its first real test. Another provider is a
+    twenty-line swap in that one function. Sending through Outlook via Graph was considered and
+    rejected for promotions: consumer outlook.com accounts have low daily limits, and bulk mail from
+    one risks locking the mailbox that *is* the booking channel.
 
 0. **TODAY (2026-08-26): turn off Cloudflare Email Address Obfuscation.** Cloudflare is rewriting
    every email address in the site HTML into a `[email protected]` placeholder that only
