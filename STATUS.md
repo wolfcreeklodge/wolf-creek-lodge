@@ -35,7 +35,16 @@ precedent -- `public/images` is gitignored, so an overwrite there is unrecoverab
 A fingerprint pass found `deck-panoramic`, `deck-winter` and `hero-living-area` are byte-identical
 to frames in the new batch, so the apartment set has always been WhatsApp material, capped at
 1600 px and ~200 KB. The new frames are parity on quality and better on composition, not better
-photographs. Owner is shooting the property properly in the week of 2026-09-21.
+photographs.
+
+**2026-09-26 shoot, landed 2026-09-27.** The first camera originals of the house (5712x4284): the
+three great room frames are replaced with the window wall, the fireplace wall and the open plan
+through to the kitchen, and `greatRoomPhotos[0]` -- which is also the Featured Retreat card -- is
+now the window wall onto the meadow. `/area` gains the first photograph of the drive over the pass,
+with a lens flare noted in the code for replacement. The key lockbox shot from the same roll was
+left out deliberately: `public/` is served wholesale, so it would be public even behind the arrival
+token (Known broken 3). Still not photographed: the apartment at camera resolution, the property
+exterior in autumn, and any summer deck shot.
 
 Five defects surfaced while wiring the photographs in, all fixed:
 
