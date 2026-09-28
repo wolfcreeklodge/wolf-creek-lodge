@@ -22,6 +22,31 @@
   --color-card-hover: rgba(255, 255, 255, 0.95);
   --color-divider: rgba(166, 123, 91, 0.12);
 
+  /* Seasonal accent.
+     The site has one accent colour and the season decides which. Everything
+     below is an alias onto the palette above, so a season is a re-point, not
+     a new colour scheme -- the earth tones stay, the highlight moves.
+        --color-accent        bright, for text and borders on a light ground
+        --color-accent-deep   dark, for white text on a filled button
+        --color-accent-hover  darker still, for the hover state
+     Defaults are winter's, which are the values the site shipped with, so a
+     browser that somehow lands without a data-season gets today's look.
+     Overrides live in the [data-season] block further down. */
+  --color-accent: #4A7C6F;
+  --color-accent-deep: #345C52;
+  --color-accent-hover: #2D4A3E;
+
+  /* Seasonal ground. Two surface tints -- the page background and the
+     alternating section background. These are the only literals in the file
+     that are not in the named palette: they are deliberate low-saturation
+     shifts of snow and parchment, cool in winter and warm in autumn, and they
+     are what makes the repaint read as a season rather than as a new button
+     colour. Defined once here, never in a component. */
+  --season-ground: #F7F9FA;
+  --season-ground-alt: #E8EFF0;
+  --season-band-from: #2D4A3E;
+  --season-band-to: #345C52;
+
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
 
@@ -35,6 +60,57 @@
   --shadow-lg: 0 8px 32px rgba(44, 24, 16, 0.12);
   --shadow-xl: 0 16px 48px rgba(44, 24, 16, 0.16);
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Seasons ────────────────────────────────────────────
+   data-season is set on <html> by the root layout, server-side, from the
+   wcl_season cookie or from today's date. Four values only; lib/seasons.js
+   validates before it ever reaches this selector.
+
+   Accent pairs are chosen for contrast as well as mood: every
+   --color-accent-deep clears 4.5:1 against white, because it carries white
+   button text, and every --color-accent clears it against the page ground,
+   because it carries small uppercase label text. Do not swap one for the
+   other to get a brighter button. */
+
+[data-season='winter'] {
+  --color-accent: var(--color-creek);
+  --color-accent-deep: var(--color-creek-dark);
+  --color-accent-hover: var(--color-pine);
+  --season-ground: #F7F9FA;
+  --season-ground-alt: #E8EFF0;
+  --season-band-from: var(--color-pine);
+  --season-band-to: var(--color-creek-dark);
+}
+
+[data-season='spring'] {
+  --color-accent: var(--color-pine-light);
+  --color-accent-deep: var(--color-pine-light);
+  --color-accent-hover: var(--color-pine);
+  --season-ground: #FAFBF7;
+  --season-ground-alt: #EAF1E7;
+  --season-band-from: var(--color-creek-dark);
+  --season-band-to: var(--color-pine-light);
+}
+
+[data-season='summer'] {
+  --color-accent: var(--color-gold);
+  --color-accent-deep: var(--color-saddle);
+  --color-accent-hover: var(--color-timber);
+  --season-ground: var(--color-snow);
+  --season-ground-alt: var(--color-parchment);
+  --season-band-from: var(--color-saddle);
+  --season-band-to: var(--color-creek-dark);
+}
+
+[data-season='fall'] {
+  --color-accent: var(--color-ember);
+  --color-accent-deep: var(--color-ember);
+  --color-accent-hover: var(--color-saddle);
+  --season-ground: #FBF6EF;
+  --season-ground-alt: #F1E3D2;
+  --season-band-from: var(--color-timber);
+  --season-band-to: var(--color-saddle);
 }
 
 /* ── Reset ──────────────────────────────────────────── */
@@ -53,7 +129,8 @@ html {
 body {
   font-family: var(--font-body);
   color: var(--color-timber);
-  background: var(--color-snow);
+  /* Seasonal. See the [data-season] block above. */
+  background: var(--season-ground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
@@ -101,7 +178,7 @@ h1, h2, h3, h4 {
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-creek);
+  color: var(--color-accent);
   margin-bottom: 0.75rem;
 }
 
@@ -119,7 +196,7 @@ h1, h2, h3, h4 {
 }
 
 .section--alt {
-  background: var(--color-parchment);
+  background: var(--season-ground-alt);
 }
 
 .section--dark {
@@ -486,12 +563,12 @@ h1, h2, h3, h4 {
 }
 
 .btn--primary {
-  background: var(--color-creek);
+  background: var(--color-accent-deep);
   color: #fff;
 }
 
 .btn--primary:hover {
-  background: var(--color-creek-dark);
+  background: var(--color-accent-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -1220,7 +1297,7 @@ h1, h2, h3, h4 {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--color-creek);
+  background: var(--color-accent);
   flex-shrink: 0;
   position: relative;
   top: -1px;
@@ -2035,6 +2112,14 @@ h1, h2, h3, h4 {
 
 .grounds-grid img {
   width: 100%;
+  /* height:auto is load-bearing, not tidiness. next/image emits width and
+     height attributes, which map to presentational CSS height -- a used value,
+     not auto -- and aspect-ratio is ignored unless one axis is auto. Without
+     this the two aspect-ratio rules below silently did nothing and every frame
+     rendered at its declared pixel height: the lead came out 1152x1099 instead
+     of 21/9. Harmless while the photos were 16:9 stubs, ruinous the moment a
+     panorama went in the lead slot. */
+  height: auto;
   border-radius: var(--radius-md);
   object-fit: cover;
 }
@@ -2762,45 +2847,340 @@ h1, h2, h3, h4 {
   .event-card-head { flex-direction: column; }
 }
 
-/* --- Winter season band (homepage) --------------------------------------- */
-.winter-band {
-  background: linear-gradient(135deg, var(--color-pine) 0%, var(--color-creek-dark) 100%);
+/* --- Season band (homepage) ---------------------------------------------- */
+/* Was .winter-band, hardcoded to winter with a comment telling whoever came
+   next to swap it after the thaw. It follows data-season now and should not
+   need touching again. Both gradient stops are dark enough to carry
+   --color-snow text in all four seasons; check that before changing one. */
+.season-band {
+  background: linear-gradient(135deg, var(--season-band-from) 0%, var(--season-band-to) 100%);
   color: var(--color-snow);
   padding: 3rem 0;
 }
-.winter-band-inner {
+.season-band-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 2.5rem;
   flex-wrap: wrap;
 }
-.winter-band .section-label { color: var(--color-wheat); }
-.winter-band h2 {
+.season-band .section-label { color: var(--color-wheat); }
+.season-band h2 {
   font-family: var(--font-display);
   font-size: clamp(1.5rem, 3vw, 2.1rem);
   line-height: 1.2;
   margin: 0.3rem 0 0.7rem;
   max-width: 34ch;
 }
-.winter-band p {
+.season-band p {
   margin: 0;
   max-width: 58ch;
   color: rgba(250, 247, 242, 0.85);
 }
-.winter-band .btn--primary {
+.season-band .btn--primary {
   background: var(--color-snow);
-  color: var(--color-pine);
+  /* Inverted against the dark band, so this takes the accent rather than
+     giving it: dark seasonal text on a snow button. */
+  color: var(--color-accent-hover);
   border-color: var(--color-snow);
   flex-shrink: 0;
 }
-.winter-band .btn--primary:hover {
+.season-band .btn--primary:hover {
   background: var(--color-wheat);
   border-color: var(--color-wheat);
   color: var(--color-timber);
 }
 @media (max-width: 820px) {
-  .winter-band-inner { flex-direction: column; align-items: flex-start; }
+  .season-band-inner { flex-direction: column; align-items: flex-start; }
+}
+
+/* --- Seasonal chrome ------------------------------------------------------ */
+
+/* Sits above the brand in the hero and names the season the visitor is
+   looking at, so the photograph is not the only thing saying so.
+   Uses accent-hover, not accent: .photo-hero has no CSS of its own (the
+   component is a post-disk-loss stub and its styles never came back), so this
+   renders on the page ground rather than over the image. Gold and ember on
+   near-white would not carry 0.78rem uppercase text. */
+.hero-kicker {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-accent-hover);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Four cards, one per season, the chosen one first and expanded. Wider
+   minimum than .property-grid so the three short cards do not end up as a
+   ragged single column on a laptop. */
+.season-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.season-card--spring {
+  background: linear-gradient(135deg, #eef4ea 0%, #dfeada 100%);
+  border: 1px solid rgba(61, 99, 85, 0.15);
+}
+
+.season-card--fall {
+  background: linear-gradient(135deg, #f7ece0 0%, #efdcc8 100%);
+  border: 1px solid rgba(199, 82, 42, 0.18);
+}
+
+/* The chosen season. Given the whole first column on a wide grid so its
+   longer list does not stretch the row. */
+.season-card.is-active {
+  box-shadow: var(--shadow-md);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.season-card__months {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-rawhide);
+  margin-bottom: 1rem;
+}
+
+.season-card__hook {
+  font-size: 0.95rem;
+  color: var(--color-saddle);
+}
+
+.season-card__note {
+  margin-top: 1rem;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--color-saddle);
+}
+
+/* --- Season picker -------------------------------------------------------- */
+
+/* Nav control. Reads as a status pill rather than a link, because that is what
+   it is: it tells you the site is showing you one season out of four. */
+.season-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-accent-hover);
+  background: transparent;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.season-trigger:hover {
+  background: var(--color-accent-deep);
+  border-color: var(--color-accent-deep);
+  color: #fff;
+}
+
+.season-trigger__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.season-trigger__prefix {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+/* Seven nav links plus a pill is tight before the mobile breakpoint lands.
+   Drop the word "Showing" first; the icon and the season name still say it. */
+@media (max-width: 1080px) {
+  .season-trigger__prefix { display: none; }
+}
+
+/* The mobile panel is a stretch column, which would blow the pill out to the
+   full 280px. */
+@media (max-width: 768px) {
+  .nav-links:not(.nav-links--desktop) .season-trigger {
+    align-self: center;
+  }
+}
+
+/* Fixed to the viewport, which is why the dialog is rendered as a sibling of
+   <main> and not inside the nav: .nav sets backdrop-filter and would become
+   the containing block for anything fixed inside it. */
+.season-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.season-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.season-modal__panel {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow-y: auto;
+  padding: 2.5rem 2rem 2rem;
+  background: var(--color-snow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  animation: season-modal-in 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes season-modal-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A visitor who has already decided should be able to get past this without
+   reading it. Prefers-reduced-motion drops the entrance entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .season-modal__panel { animation: none; }
+}
+
+.season-modal__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.9rem;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-rawhide);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.season-modal__close:hover {
+  color: var(--color-timber);
+  background: var(--color-parchment);
+}
+
+.season-modal__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  font-weight: 700;
+  color: var(--color-timber);
+  margin-bottom: 0.6rem;
+}
+
+.season-modal__desc {
+  max-width: 48ch;
+  margin: 0 auto 1.75rem;
+  color: var(--color-saddle);
+}
+
+.season-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.85rem;
+  text-align: left;
+}
+
+.season-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem 1rem;
+  font-family: var(--font-body);
+  background: var(--color-parchment);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition), transform var(--transition),
+    box-shadow var(--transition);
+}
+
+.season-option:hover,
+.season-option:focus-visible {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Each option previews its own season's ground, so the choice is legible
+   before it is made. These match the [data-season] --season-ground-alt
+   values above; keep the two in step. */
+.season-option--winter { background: #E8EFF0; }
+.season-option--spring { background: #EAF1E7; }
+.season-option--summer { background: var(--color-parchment); }
+.season-option--fall { background: #F1E3D2; }
+
+.season-option.is-active {
+  border-color: var(--color-accent-deep);
+}
+
+.season-option__icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.season-option__label {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-timber);
+}
+
+.season-option__months {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-rawhide);
+}
+
+.season-option__hook {
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--color-saddle);
+}
+
+.season-modal__skip {
+  margin-top: 1.5rem;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--color-rawhide);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+}
+
+.season-modal__skip:hover {
+  color: var(--color-saddle);
+  border-bottom-color: var(--color-rawhide);
+}
+
+@media (max-width: 640px) {
+  .season-modal__panel { padding: 2rem 1.25rem 1.5rem; }
+  .season-modal__grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .season-option { padding: 0.85rem 0.75rem; }
+  .season-option__hook { display: none; }
 }
 
 /* -- Booking panel (email-first) --------------------- */
@@ -2899,6 +3279,190 @@ h1, h2, h3, h4 {
 
 .booking-fallback a:hover {
   color: var(--color-saddle);
+}
+
+/* -- Booking request form -------------------------------------------------- */
+/* Sits in the right-hand column of .booking-panel, roughly 430px wide on a
+   laptop. Rows are wrapping flex rather than a grid so the two dates and the
+   guest count share a line there and stack cleanly on a phone. */
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.booking-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.booking-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-saddle);
+}
+
+.booking-form__field--wide { flex-basis: 100%; }
+.booking-form__field--narrow { flex: 0 1 80px; }
+
+.booking-form__field em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--color-rawhide);
+}
+
+.booking-form__field input,
+.booking-form__field select,
+.booking-form__field textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--color-timber);
+  background: var(--color-snow);
+  border: 1px solid var(--color-wheat);
+  border-radius: var(--radius-sm);
+}
+
+.booking-form__field textarea { resize: vertical; }
+
+.booking-form__field input:focus,
+.booking-form__field select:focus,
+.booking-form__field textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
+}
+
+/* The calendar's answer. Reserves a line so the form does not jump when it
+   arrives. */
+.booking-form__status {
+  min-height: 1.6rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.booking-form__hint { color: var(--color-rawhide); }
+
+.booking-form__ok {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__warn {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-ember);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__taken {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--color-gold);
+  background: var(--color-parchment);
+  color: var(--color-timber);
+}
+
+.booking-form__alts {
+  list-style: none;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.booking-form__alts button {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-accent-hover);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Honeypot. Off-screen rather than display:none, because some bots skip
+   fields that are not rendered at all. */
+.booking-form__hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.booking-form__consent {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-saddle);
+  cursor: pointer;
+}
+
+.booking-form__consent input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  accent-color: var(--color-accent-deep);
+}
+
+.booking-form__submit {
+  width: 100%;
+  text-align: center;
+}
+
+.booking-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.booking-form__fine {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--color-rawhide);
+}
+
+.booking-form__fine a {
+  color: var(--color-accent-hover);
+  font-weight: 600;
+}
+
+.booking-form__done {
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-parchment);
+}
+
+.booking-form__done h3 { margin-bottom: 0.4rem; }
+
+.booking-form__done p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--color-saddle);
+}
+
+.booking-form__done .booking-form__ref {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-rawhide);
 }
 
 .cta-phone {

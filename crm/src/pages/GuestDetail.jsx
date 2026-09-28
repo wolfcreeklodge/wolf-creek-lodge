@@ -1,6 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import EmailList from '../components/EmailList';
+import { api } from '../hooks/useApi';
+import { useToast } from '../components/Toast';
+
+// Promotions go only to "opted in". This is where Bo records that a guest
+// agreed -- or said no -- when it happened outside the website form.
+function ConsentControl({ guest, onChange }) {
+  const toast = useToast();
+  const [saving, setSaving] = useState(false);
+
+  async function set(value) {
+    setSaving(true);
+    try {
+      const updated = await api.put(`/api/guests/${guest.id}`, { marketing_consent: value });
+      onChange(updated);
+      toast.success('Saved.');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const source = {
+    booking_form: 'ticked the box on the request form',
+    crm: 'set here',
+    unsubscribe_link: 'used the unsubscribe link',
+  }[guest.marketing_consent_source];
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-saddle font-semibold">Promotions:</span>
+      <select
+        value={guest.marketing_consent || 'unknown'}
+        disabled={saving || !guest.email}
+        onChange={(e) => set(e.target.value)}
+        className="px-2 py-1 border border-wheat/40 rounded text-sm bg-white"
+      >
+        <option value="unknown">Not asked</option>
+        <option value="opted_in">Opted in</option>
+        <option value="opted_out">Opted out</option>
+      </select>
+      {!guest.email && <span className="text-rawhide text-xs">No email address on file.</span>}
+      {guest.marketing_consent_at && source && (
+        <span className="text-rawhide text-xs">
+          {source}, {new Date(guest.marketing_consent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function GuestDetail() {
   const { id } = useParams();
@@ -87,6 +137,8 @@ export default function GuestDetail() {
             {[guest.city, guest.state_province, guest.country].filter(Boolean).join(', ')}
           </p>
         )}
+
+        <ConsentControl guest={guest} onChange={(updated) => setGuest((g) => ({ ...g, ...updated }))} />
 
         {guest.tags && guest.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
