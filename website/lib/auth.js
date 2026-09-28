@@ -26,6 +26,17 @@ export function isAllowedEmail(email) {
   return ALLOWED_EMAILS.includes(String(email || '').toLowerCase());
 }
 
+// The mailbox scripts/sync-email.mjs reads. Every allowed account may sign in,
+// but only this one's sign-in may replace the sync's Graph tokens: the sync
+// reads whoever the token belongs to, and storing every admin's token moved it
+// to another allowed account's inbox for a month (2026-08-27 to 09-28).
+// crm/server/auth.js applies the same rule.
+const SYNC_MAILBOX = (process.env.MAILBOX_EMAIL || 'wolfcreeklodge@outlook.com').trim().toLowerCase();
+
+export function isSyncMailbox(email) {
+  return String(email || '').toLowerCase() === SYNC_MAILBOX;
+}
+
 // MSAL never exposes result.refreshToken -- it keeps refresh tokens in its token
 // cache by design. Reading that property (which both this route and the CRM used
 // to do) silently stored null forever, which is why email_sync_state had an

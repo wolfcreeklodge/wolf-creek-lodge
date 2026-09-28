@@ -37,6 +37,8 @@ services:
       MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
       WEBSITE_AUTH_SECRET: ${WEBSITE_AUTH_SECRET:-change_me_website_auth_secret_32ch}
       ADMIN_ALLOWED_EMAILS: ${CRM_ALLOWED_EMAILS:-wolfcreeklodge@outlook.com}
+      # Only this account's admin sign-in may replace the email sync's tokens.
+      MAILBOX_EMAIL: ${MAILBOX_EMAIL:-wolfcreeklodge@outlook.com}
       WEBSITE_REDIRECT_URI: ${WEBSITE_REDIRECT_URI:-https://wolfcreeklodge.us/api/auth/callback}
       # Shows the booking request form on the listing pages in place of
       # "Email to Book". Off until email-send has a real provider; see
@@ -80,6 +82,9 @@ services:
       MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
       MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-https://crm.wolfcreeklodge.us/auth/callback}
       CRM_ALLOWED_EMAILS: ${CRM_ALLOWED_EMAILS:-wolfcreeklodge@outlook.com}
+      # Only this account's sign-in may replace the email sync's tokens.
+      # Must match email-sync's MAILBOX_EMAIL below.
+      MAILBOX_EMAIL: ${MAILBOX_EMAIL:-wolfcreeklodge@outlook.com}
       DEV_BYPASS_AUTH: ${DEV_BYPASS_AUTH:-false}
     depends_on:
       database:
@@ -108,6 +113,7 @@ services:
       MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
       MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
       MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      MAILBOX_EMAIL: ${MAILBOX_EMAIL:-wolfcreeklodge@outlook.com}
     depends_on:
       database:
         condition: service_healthy

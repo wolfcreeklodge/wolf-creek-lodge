@@ -1,6 +1,7 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
+**Last updated:** 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
+bookings entered.** See "CRM and email sync".) Previous: 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
 
 A guest booked by email without looking at the calendar, which is what the mailto: link invited. The
 site now has a real request form: pick dates and it answers at once -- open or taken, the direct
@@ -367,6 +368,30 @@ that redirect URI was already registered on the app, so it needed no Azure chang
 Two things worth knowing about the sync: `delta_link` is still null, so each run does a full
 200-message fetch rather than an incremental one (`ON CONFLICT (graph_id) DO NOTHING` makes that
 harmless but wasteful), and nothing ever writes `last_sync_at`.
+
+**2026-09-28: the sync read the wrong inbox for a month.** Both sign-in paths (the CRM's
+`crm/server/auth.js` and the website admin's `app/api/auth/[action]/route.js`) stored the Graph
+token of *any* allowlisted account, and the sync reads `/me/messages`, i.e. whoever the token
+belongs to. The allowlist has two accounts. One sign-in with the second account on 2026-08-27
+moved the sync to that personal inbox: no lodge mail was synced from then until 2026-09-28, and
+four Vrbo bookings (Sep 4-7, Oct 1-4, Oct 8-10, Oct 10-12, all the Apartment) never reached the
+CRM. Fixed three ways:
+
+- Both sign-in paths store tokens only when the account is `MAILBOX_EMAIL` (default the lodge
+  address). Every allowlisted account can still sign in; the others just get a session.
+- `sync-email.mjs` asks Graph whose mailbox the token opens (`/me`) on every run, and skips the
+  run if it is not `MAILBOX_EMAIL`.
+- `MAILBOX_EMAIL` is set once in compose for website, crm and email-sync.
+
+Cleanup done the same day: the lodge account signed back in, the sync backfilled 103 lodge
+messages from Aug 27 on, the four Vrbo stays were entered with guest name and phone from the full
+confirmation emails, and the 3,249 rows synced from the personal inbox were deleted (none were
+linked to a guest or reservation). The pre-07 dump in `C:\wcl-assets\db` (2026-09-27) predates the
+delete and still contains those rows.
+
+**Vrbo confirmations carry the traveler's name and phone but no email address.** Nothing turns
+them into guests or reservations automatically; the sync keeps only a 255-character snippet,
+which holds neither. Until that is built, Vrbo bookings are entered by hand.
 
 ---
 
