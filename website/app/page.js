@@ -117,8 +117,8 @@ export default async function Home() {
       <PhotoHero photo={season.hero || PROPERTY_AERIAL}>
         <p className="hero-kicker">{season.kicker}</p>
         <h1>
-          Wolfridge<br />
-          <em>Retreats</em>
+          Wolfcreek<br />
+          <em>Lodge</em>
         </h1>
         <p className="hero-tagline">{season.tagline || siteConfig.tagline}</p>
         <p className="hero-location">
