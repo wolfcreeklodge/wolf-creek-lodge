@@ -1,6 +1,99 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-08-26 (**Auth, email sync and the CRM all work; the CRM is published.**)
+**Last updated:** 2026-09-15 (**The site has four seasonal looks and asks the visitor which one.**)
+
+The homepage was hardcoded to winter -- winter band, winter-first activity cards, one fixed hero --
+with a code comment telling whoever came next to swap it after the thaw. It is now driven by
+`website/lib/seasons.js`: one module holds each season's accent palette, hero, mood frame, grounds
+gallery, band copy and activity list. A popup asks a first-time visitor which season they are
+thinking about; the answer goes in the `wcl_season` cookie, the root layout reads it server-side and
+stamps `data-season` on `<html>`, and CSS repaints from there. No cookie means the season the valley
+is actually in today, which is what a crawler sees. The choice is changeable from a pill in the nav
+and is reported to Umami as `season-chosen`, so demand by season becomes a number rather than a
+guess.
+
+Rendering the chosen season on the server rather than shipping all four and hiding three with CSS is
+deliberate: the alternative would have quadrupled the image weight of a page whose hero was only
+just brought down from 17.4 MB to 61 KB.
+
+**The autumn gap closed the same day.** The feature shipped with no autumn photography at all, so
+fall -- the season that prompted it, and the one live right now -- was dressed in late-summer
+frames. Real larch photography then arrived in `House Photos for Website/2026 Lana` and now carries
+the fall hero, the mood band and the gallery lead. Three new derivatives under
+`public/images/autumn/`, plus an alpine lake in `public/images/area/` for the summer set, which had
+claimed North Cascades hiking as a draw since before there was a photo of it. Details and the
+remaining caveats in Known broken 9.
+
+**The apartment set was reworked too.** `kitchen.jpg` and `living-room.jpg` were the weakest frames
+and better versions of both rooms existed in the same batch; they are replaced by
+`kitchen-galley.jpg` (the full galley run, straight on) and `living-room-workspace.jpg` (the whole
+room, and the desk the listing advertises but had no photograph of). A new `stairs.jpg` was added
+deliberately: the apartment is over the garage and a guest who needs to know there is a flight of
+stairs should not have to infer it. Old files stay on disk unreferenced, per the 2026-08-26
+precedent -- `public/images` is gitignored, so an overwrite there is unrecoverable.
+
+A fingerprint pass found `deck-panoramic`, `deck-winter` and `hero-living-area` are byte-identical
+to frames in the new batch, so the apartment set has always been WhatsApp material, capped at
+1600 px and ~200 KB. The new frames are parity on quality and better on composition, not better
+photographs.
+
+**2026-09-26 shoot, landed 2026-09-27.** The first camera originals of the house (5712x4284): the
+three great room frames are replaced with the window wall, the fireplace wall and the open plan
+through to the kitchen, and `greatRoomPhotos[0]` -- which is also the Featured Retreat card -- is
+now the window wall onto the meadow. `/area` gains the first photograph of the drive over the pass,
+with a lens flare noted in the code for replacement. The key lockbox shot from the same roll was
+left out deliberately: `public/` is served wholesale, so it would be public even behind the arrival
+token (Known broken 3). Still not photographed: the apartment at camera resolution, the property
+exterior in autumn, and any summer deck shot.
+
+Five defects surfaced while wiring the photographs in, all fixed:
+
+- **`.grounds-grid` never applied its own aspect ratios.** `next/image` emits `width`/`height`
+  attributes, which map to presentational CSS height; `aspect-ratio` is ignored unless an axis is
+  `auto`. The 21/9 and 16/9 rules had been dead the whole time and every frame rendered at its
+  declared pixel height. Invisible while the photos were 16:9 stubs; it cropped the new panorama to
+  1152x1099 the moment one went in the lead slot. One line: `height: auto`.
+- **`grounds/building-mountain.jpg` had wrong alt text.** The stub called it "The house against the
+  mountain". It is deep winter -- snow to the treeline. It was about to be served as an autumn
+  frame, because the seasonal sets pick photographs by alt-text fragment. Corrected, and the fall
+  set now takes `exterior/house-garage-from-field.jpg` instead.
+- **Six apartment photos declared the wrong dimensions.** Anything not passed explicitly fell back
+  to the 1920x1080 default. `exterior.jpg` was the bad one: 1600x2133 portrait, declared landscape.
+  All ten now carry measured values.
+- **`PhotoStrip` never emitted the wrapper its CSS targets.** globals.css styles
+  `.photo-strip-item img` (fixed 280px height, auto width, `object-fit: cover`); the stub rendered
+  images as bare flex children, so with `align-items: stretch` every listing gallery thumbnail was
+  squeezed into one uniform box and stretched to fill it. Landscape photographs have been rendering
+  visibly squashed on all three `/listings/[id]` pages since the May rebuild. Correcting
+  `exterior.jpg` to portrait made the row taller and the distortion unmissable, which is how it was
+  found. The wrapper is restored and each frame now sizes to its own aspect ratio.
+- **`GallerySection` had the identical mismatch** -- `.gallery-section__grid` / `__item` /
+  `__title` against CSS written for `.gallery-grid` / `.gallery-item` / `.gallery-section-title`.
+  Nothing matched, so the grid never applied and every section was a single column of full-width
+  images. At a 1280 viewport the four homepage room galleries measured **11,664 px tall for eleven
+  photographs**, with `great-room/piano.jpg` rendering 1152x2048. Now 2,963 px, a 75 percent cut.
+  Renamed the component to the stylesheet rather than writing new CSS for the BEM names: the
+  stylesheet is the surviving half of the lost original, and duplicating it would have left
+  `.gallery-grid` and `.gallery-item--lead` dead in a 3,300-line file. The stub's inline
+  `height: auto` had to go with it -- inline beats the stylesheet and would have defeated
+  `.gallery-grid img { height: 100% }` and the `object-fit` cropping.
+
+  The `aspect-ratio` trap that bit `.grounds-grid` does **not** bite here, which is worth knowing
+  before anyone "fixes" it: the img carries `height: 100%` against a grid item of indefinite
+  height, that resolves to auto, and the ratio applies. Measured 4/3 on every cell including the
+  four genuinely portrait sources.
+
+  `.gallery-item--lead` is now used, derived from the photo count rather than passed per call
+  site: the grid is two columns, so an odd count orphans the last row and promoting the first
+  photograph makes the remainder even. Checked against all seven sections (four homepage, three
+  `/area`) -- it removes every orphan and creates none. Derived rather than hardcoded because the
+  arrays move: `widerValleyPhotos` went 5 to 6 on 2026-09-15 and flipped its own answer. Both
+  images the rule actually promotes were checked at 16/9 first; `bedrooms/master-bedroom.jpg` is
+  portrait 2000x2667 and keeps its headboard, quilt and shoji screen.
+
+---
+
+**Prior entry (2026-08-26):** (**Auth, email sync and the CRM all work; the CRM is published.**)
 
 Since the 2026-08-25 entry below: Microsoft sign-in was fixed on both surfaces and email sync now
 runs (200 messages). The CRM turned out never to have been a broken build -- its login path was
@@ -146,7 +239,7 @@ falls straight back to flat pricing.
 
 | Route | Rendering | Notes |
 |---|---|---|
-| `/` | dynamic | hero, winter band, featured Retreat, property cards, galleries, host |
+| `/` | dynamic | **seasonal.** Hero, mood frame, grounds gallery, band and activity cards all follow `data-season`. Featured Retreat, property cards, interiors and host are year-round |
 | `/winter` | dynamic | **new.** Trail passes, Loup Loup, the winter drive, event calendar, rate table |
 | `/area` | dynamic | seasonal activities + Highway 20 winter access |
 | `/about`, `/contact` | dynamic | |
@@ -383,6 +476,23 @@ Server instructions now state the exclusion constraint and the winter road const
    resolve on 2026-08-25 pulled mcp 2.x, where `FastMCP` became `MCPServer`, and the container
    crash-looped. Now `mcp[cli]>=1.0.0,<2` (running 1.29.1). Migrating `server.py` to the 2.x
    API is still open work.
+
+9. **~~There is no autumn photography~~ -- largely fixed 2026-09-15, same day.** Three genuine
+   larch frames shot 2023-09-30 at peak now carry the fall hero, the mood band and the gallery
+   lead, from `House Photos for Website/2026 Lana`. What remains open:
+   - **Nothing autumnal at the property.** All three larch frames are the high country up Highway
+     20, not the house. The alt text says so deliberately, and the two secondary gallery frames are
+     year-round property shots rather than dressed-up summer ones. A shoot of the *property* in
+     October -- the meadow, the cottonwoods, the west patio -- is still the missing asset.
+   - **Two locations are unconfirmed.** The spires read like the Liberty Bell group above
+     Washington Pass, and `area/alpine-lake.jpg` like Lake Ann on the Maple Pass loop, but nobody
+     has confirmed either, so no place name appears in any alt text. Ask the owner before naming
+     them: this site is optimised for answer engines and a wrong landmark would propagate.
+   - **The panorama originals are awkward.** Both arrived as iOS HEIC tiled at 48 and 64 references.
+     libheif refuses more than 16 by default and sharp exposes no way to raise the limit, so they
+     were decoded out of band with `heic-decode`. Anyone regenerating these derivatives will hit the
+     same wall. Originals (12 MB, ~16000 px wide) stay in OneDrive and are deliberately **not** in
+     `public/`, which is served wholesale -- the mistake behind Known broken 3.
 
 ---
 
