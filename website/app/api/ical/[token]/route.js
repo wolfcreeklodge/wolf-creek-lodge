@@ -12,8 +12,7 @@ export async function GET(request, { params }) {
   try {
     // 1. Look up property by ical_export_token
     const { rows: propRows } = await pool.query(
-      `SELECT id, title, is_combo_listing, combined_listings
-       FROM properties WHERE ical_export_token = $1`,
+      `SELECT id, title FROM properties WHERE ical_export_token = $1`,
       [token]
     );
 
@@ -23,37 +22,23 @@ export async function GET(request, { params }) {
 
     const property = propRows[0];
 
-    // 2. Determine which property IDs block this property
-    const blockingIds = [property.id];
-
-    if (property.is_combo_listing && Array.isArray(property.combined_listings)) {
-      // Retreat: also blocked by its component listings
-      blockingIds.push(...property.combined_listings);
-    } else {
-      // Individual unit: also blocked by any combo that includes it
-      const { rows: combos } = await pool.query(
-        `SELECT id FROM properties
-         WHERE is_combo_listing = true AND combined_listings ? $1`,
-        [property.id]
-      );
-      blockingIds.push(...combos.map(c => c.id));
-    }
-
-    // 3. Query active reservations for all blocking properties
+    // 2. Everything that closes this property's dates. effective_blocks()
+    // (database/08-calendar-blocks.sql) applies the exclusivity rule. This feed
+    // matters most: Airbnb imports it, so a Retreat mirror of an Apartment
+    // booking exported on the House's feed used to close the House on Airbnb.
     const { rows: reservations } = await pool.query(
-      `SELECT id, check_in, check_out
-       FROM reservations
-       WHERE property_id = ANY($1)
-         AND status NOT IN ('cancelled', 'no_show')
+      `SELECT reservation_id AS id, check_in, check_out, partial
+       FROM effective_blocks($1, NULL, NULL)
        ORDER BY check_in`,
-      [blockingIds]
+      [property.id]
     );
 
-    // 4. Generate iCal
+    // 3. Generate iCal. A clipped mirror can come back as several ranges of
+    // one reservation, so those UIDs carry their start date to stay unique.
     const now = formatDateTimeUTC(new Date());
     const events = reservations.map(r => [
       'BEGIN:VEVENT',
-      `UID:${r.id}@wolfcreeklodge.us`,
+      `UID:${r.id}${r.partial ? `-${formatDateOnly(r.check_in)}` : ''}@wolfcreeklodge.us`,
       `DTSTAMP:${now}`,
       `DTSTART;VALUE=DATE:${formatDateOnly(r.check_in)}`,
       `DTEND;VALUE=DATE:${formatDateOnly(r.check_out)}`,

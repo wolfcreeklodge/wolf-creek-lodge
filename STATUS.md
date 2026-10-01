@@ -1,7 +1,8 @@
 # Wolf Creek Lodge - implementation status
 
 **Last updated:** 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
-bookings entered.** See "CRM and email sync".) Previous: 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
+bookings entered; Retreat calendar mirrors no longer close the House.** See "CRM and email sync"
+and migration 08 under "Database schema".) Previous: 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
 
 A guest booked by email without looking at the calendar, which is what the mailto: link invited. The
 site now has a real request form: pick dates and it answers at once -- open or taken, the direct
@@ -24,10 +25,10 @@ Design decisions worth knowing before changing any of it:
 - **A request does not hold dates.** It is not a reservation and the overlap triggers never see it.
   Confirming in the CRM INSERTs a real reservation, and that INSERT is what the triggers police: a
   second confirmation for the same dates is refused with a 409, tested.
-- **One definition of "free"**: `stay_is_available()` and `blocking_property_ids()` in
-  `database/07-booking-requests.sql`. The form, the CRM and the waitlist flag all call it. The
-  overlap triggers and `/api/availability` still carry their own copies of the same rule; they
-  agree, and they could adopt the function.
+- **One definition of "free"**: `effective_blocks()` in `database/08-calendar-blocks.sql`, with
+  `stay_is_available()` on top of it. As of 2026-09-28 every reader goes through it: the form,
+  the CRM, the waitlist flag, `/api/availability`, the iCal export and the MCP server. The
+  overlap triggers still carry their own copy of the rule.
 - **Waitlisted guests are never notified automatically.** The iCal feed flickers -- Airbnb's rolling
   availability window cancels and recreates a block every day, visible as the run of one-night
   cancelled Retreat rows in `reservations` -- and an automatic "your dates are free" on a flicker
@@ -273,6 +274,18 @@ Applied automatically on first compose-up via `/docker-entrypoint-initdb.d/`:
 | `database/04-winter-2026-27-rates.sql` | the winter ladder + minNights and beds fixes | **yes, 2026-08-25** (11 seasons, 33 rate rows) |
 | `database/05-arrival-tokens.sql` | `reservations.arrival_token` + unique index, for the private arrival page | **yes, 2026-08-25** |
 | `database/07-booking-requests.sql` | `booking_requests`, `promotions`, `outbound_emails`; guest `marketing_consent` + `unsubscribe_token`; `stay_is_available()`, `blocking_property_ids()`. Additive, idempotent | **yes, 2026-09-27** |
+| `database/08-calendar-blocks.sql` | `reservations.is_calendar_block`; `effective_blocks()`; `stay_is_available()` and the cross-property trigger rebuilt on it. Additive, idempotent | **yes, 2026-09-28** |
+
+**08, in one paragraph.** Airbnb links the three listings: a booked unit shows "Not available" on
+the Retreat, a booked Retreat shows it on both units. The iCal import stored those mirrors as
+reservations and every reader applied "a Retreat row blocks both units" to them, so an Apartment
+booking, mirrored onto the Retreat, closed the House -- 30 House nights between Oct 2026 and Jul
+2027 on the day it was found, and the House's own Airbnb listing wherever Airbnb imports the House
+feed. Now a Retreat *calendar block* seen from a unit only closes nights no unit row explains (a
+unit booked somewhere this database cannot see, so it stays conservative and closes both), a real
+Retreat booking still closes both units whole, and the trigger no longer lets a Retreat mirror
+reject a unit booking, so a Vrbo stay can be entered normally. Entering a missed Vrbo booking is
+what frees the House on those nights. Dump taken first: `C:\wcl-assets\db\wolfcreek-pre-08-*.dump`.
 
 Both applied 2026-08-25. The ladder went in **as written**, on the owner's call, without the
 occupancy check the decision rule below asks for: `reservations` is empty on this database, so that

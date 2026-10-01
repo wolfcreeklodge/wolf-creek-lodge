@@ -354,21 +354,10 @@ def check_availability(property_id: str, check_in: str, check_out: str) -> dict:
             ),
         }
 
-    # Check for conflicting reservations
+    # Conflicting reservations, on this listing and on the mutually exclusive
+    # ones. The database applies the exclusivity rule, so this answer matches
+    # the website's.
     conflicts = db.check_reservation_overlap(property_id, check_in, check_out)
-
-    # Also check mutual-exclusion properties
-    ids_to_check = set()
-    if prop["is_combo_listing"]:
-        ids_to_check = set(prop.get("combines", []))
-    else:
-        # Check if any combo listing includes this property
-        for p in db.get_all_properties():
-            if p["is_combo_listing"] and property_id in p.get("combines", []):
-                ids_to_check.add(p["id"])
-
-    for related_id in ids_to_check:
-        conflicts.extend(db.check_reservation_overlap(related_id, check_in, check_out))
 
     if conflicts:
         return {

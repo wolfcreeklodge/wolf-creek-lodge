@@ -53,16 +53,20 @@ def get_site_config() -> dict | None:
 
 
 def check_reservation_overlap(property_id: str, check_in: str, check_out: str) -> list[dict]:
+    """Everything that closes property_id for [check_in, check_out).
+
+    Goes through effective_blocks() (database/08-calendar-blocks.sql), which
+    owns the exclusivity rule for all readers: the website, the CRM, the iCal
+    export and this server. That includes the related listings, and that a
+    Retreat "Not available" mirror of an Apartment booking does not close the
+    House.
+    """
     return fetch_all(
         """
-        SELECT id, check_in, check_out, status
-        FROM reservations
-        WHERE property_id = %s
-          AND status NOT IN ('cancelled', 'no_show')
-          AND check_in < %s::date
-          AND check_out > %s::date
+        SELECT reservation_id AS id, property_id, check_in, check_out
+        FROM effective_blocks(%s, %s::date, %s::date)
         """,
-        (property_id, check_out, check_in),
+        (property_id, check_in, check_out),
     )
 
 
