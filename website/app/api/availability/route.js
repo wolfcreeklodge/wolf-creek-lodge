@@ -21,42 +21,29 @@ export async function GET(request) {
 
   try {
     const { rows: properties } = await pool.query(
-      `SELECT id, title, is_combo_listing, combined_listings FROM properties ORDER BY sort_order, id`
+      `SELECT id, title FROM properties ORDER BY sort_order, id`
     );
 
     const result = [];
 
     for (const prop of properties) {
-      let blockingIds;
-      if (prop.is_combo_listing && Array.isArray(prop.combined_listings)) {
-        blockingIds = [prop.id, ...prop.combined_listings];
-      } else {
-        const { rows: combos } = await pool.query(
-          `SELECT id FROM properties WHERE is_combo_listing = true AND combined_listings ? $1`,
-          [prop.id]
-        );
-        blockingIds = [prop.id, ...combos.map(c => c.id)];
-      }
-
+      // effective_blocks() (database/08-calendar-blocks.sql) owns the
+      // exclusivity rule, including that a Retreat "Not available" mirror of
+      // an Apartment booking does not block the House.
       // Admin gets enriched data with guest names, notes, reservation IDs
       const sql = isAdmin
-        ? `SELECT r.id as reservation_id, r.check_in, r.check_out, r.property_id,
+        ? `SELECT r.id as reservation_id, b.check_in, b.check_out, b.property_id,
              r.guest_id, r.notes, r.booking_channel, r.status,
              g.first_name as guest_first_name, g.last_name as guest_last_name
-           FROM reservations r
+           FROM effective_blocks($1, $2::date, $3::date) b
+           JOIN reservations r ON r.id = b.reservation_id
            JOIN guests g ON g.id = r.guest_id
-           WHERE r.property_id = ANY($1)
-             AND r.status NOT IN ('cancelled', 'no_show')
-             AND r.check_out > $2::date AND r.check_in < $3::date
-           ORDER BY r.check_in`
+           ORDER BY b.check_in`
         : `SELECT check_in, check_out, property_id
-           FROM reservations
-           WHERE property_id = ANY($1)
-             AND status NOT IN ('cancelled', 'no_show')
-             AND check_out > $2::date AND check_in < $3::date
+           FROM effective_blocks($1, $2::date, $3::date)
            ORDER BY check_in`;
 
-      const { rows: ranges } = await pool.query(sql, [blockingIds, startDate, endDate]);
+      const { rows: ranges } = await pool.query(sql, [prop.id, startDate, endDate]);
 
       const blockedRanges = ranges.map(r => {
         const range = {

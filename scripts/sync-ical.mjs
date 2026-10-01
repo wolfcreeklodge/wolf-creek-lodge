@@ -128,6 +128,20 @@ function extractGuestName(summary) {
 }
 
 // ---------------------------------------------------------------------------
+// Tell a calendar block from a booking
+// ---------------------------------------------------------------------------
+
+// Airbnb links the three listings: a booked unit shows "Not available" on the
+// Retreat, and a booked Retreat shows it on both units. Those events close
+// dates without being bookings, and effective_blocks() in
+// database/08-calendar-blocks.sql treats a Retreat block differently from a
+// Retreat booking. Same patterns as the backfill in that migration.
+function isCalendarBlock(summary) {
+  if (!summary) return false;
+  return /^(airbnb \()?(not available|blocked|closed)\)?$/i.test(summary.trim());
+}
+
+// ---------------------------------------------------------------------------
 // Get or create a placeholder guest for Airbnb imports
 // ---------------------------------------------------------------------------
 
@@ -218,8 +232,9 @@ async function syncProperty(property) {
       // Insert reservation
       await client.query(
         `INSERT INTO reservations
-           (guest_id, property_id, check_in, check_out, booking_channel, channel_conf_code, status, notes)
-         VALUES ($1, $2, $3, $4, 'airbnb', $5, 'confirmed', $6)`,
+           (guest_id, property_id, check_in, check_out, booking_channel, channel_conf_code, status, notes,
+            is_calendar_block)
+         VALUES ($1, $2, $3, $4, 'airbnb', $5, 'confirmed', $6, $7)`,
         [
           guestId,
           propertyId,
@@ -227,6 +242,7 @@ async function syncProperty(property) {
           toDateStr(ev.dtend),
           ev.uid,
           ev.summary ? `Imported from Airbnb iCal. Summary: ${ev.summary}` : "Imported from Airbnb iCal.",
+          isCalendarBlock(ev.summary),
         ]
       );
 
