@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   getSession, getMsalClient, ALLOWED_EMAILS, REDIRECT_URI, DEV_BYPASS,
-  isAllowedEmail, extractRefreshToken,
+  isAllowedEmail, isSyncMailbox, extractRefreshToken,
 } from '../../../../lib/auth.js';
 import pool from '../../../../lib/db.js';
 
@@ -73,8 +73,11 @@ export async function GET(request, { params }) {
 
       // Persist Graph tokens so scripts/sync-email.mjs can run unattended.
       // This admin sign-in is the practical way to seed them: its redirect URI
-      // is the one already registered on the app.
-      if (result.accessToken) {
+      // is the one already registered on the app. Only the sync mailbox's
+      // sign-in stores tokens; any other allowed account just gets a session.
+      if (result.accessToken && !isSyncMailbox(email)) {
+        console.log('Signed in with an account other than the sync mailbox; email sync tokens left unchanged');
+      } else if (result.accessToken) {
         const refreshToken = extractRefreshToken(msalClient, result.account?.homeAccountId);
         try {
           await pool.query(`

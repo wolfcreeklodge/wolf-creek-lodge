@@ -51,6 +51,14 @@ function extractRefreshToken(msalClient, homeAccountId) {
   }
 }
 const ALLOWED_EMAILS = (process.env.CRM_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+
+// The mailbox scripts/sync-email.mjs is meant to read. Only a sign-in by this
+// account may replace the sync's Graph tokens. The sync reads /me/messages,
+// which is whoever the token belongs to, and the old code stored the token of
+// every allowed account that signed in. One sign-in with the other allowlisted
+// account on 2026-08-27 silently moved the sync to that inbox for a month: no
+// lodge mail was synced, and personal mail was.
+const SYNC_MAILBOX = (process.env.MAILBOX_EMAIL || 'wolfcreeklodge@outlook.com').trim().toLowerCase();
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 
 // A "secure" cookie is never sent over plain HTTP. Keying this off NODE_ENV
@@ -164,8 +172,12 @@ export function setupAuth(app) {
 
       req.session.user = { email, name };
 
-      // Persist Graph API tokens so scripts/sync-email.mjs can run unattended.
-      if (result.accessToken) {
+      // Persist Graph API tokens so scripts/sync-email.mjs can run unattended,
+      // but only for the sync mailbox. Any other allowed account just gets a
+      // CRM session.
+      if (result.accessToken && email !== SYNC_MAILBOX) {
+        console.log('Signed in with an account other than the sync mailbox; email sync tokens left unchanged');
+      } else if (result.accessToken) {
         const refreshToken = extractRefreshToken(
           msalClient,
           result.account?.homeAccountId

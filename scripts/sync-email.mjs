@@ -12,6 +12,8 @@
  *   MICROSOFT_CLIENT_ID     — Azure AD app client ID
  *   MICROSOFT_CLIENT_SECRET — Azure AD app client secret
  *   MICROSOFT_TENANT_ID     — Azure AD tenant ID (defaults to 'common')
+ *   MAILBOX_EMAIL           -- the mailbox to sync; a token for any other
+ *                             mailbox is refused (defaults to the lodge's)
  */
 
 import pg from "pg";
@@ -203,6 +205,20 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// /me/messages reads whoever the token belongs to, and until 2026-09-28 every
+// allowed CRM sign-in replaced the token. That is how this sync spent a month
+// reading the wrong inbox. Check on every run rather than trust the token.
+async function tokenOpensMailbox(accessToken) {
+  const me = await graphFetch(
+    `${GRAPH_BASE}/me?$select=mail,userPrincipalName`,
+    accessToken
+  );
+  const expected = MAILBOX_EMAIL.trim().toLowerCase();
+  return [me.mail, me.userPrincipalName]
+    .filter(Boolean)
+    .some((address) => address.toLowerCase() === expected);
+}
+
 // ---------------------------------------------------------------------------
 // Fetch messages (initial or delta)
 // ---------------------------------------------------------------------------
@@ -387,6 +403,14 @@ async function main() {
         return;
       }
       throw err;
+    }
+
+    if (!(await tokenOpensMailbox(accessToken))) {
+      console.error(
+        `\nERROR: The stored token opens a mailbox other than ${MAILBOX_EMAIL}. ` +
+          `Skipping this run. Sign in to the CRM as ${MAILBOX_EMAIL} to re-authorize.`
+      );
+      return;
     }
 
     // Fetch messages
