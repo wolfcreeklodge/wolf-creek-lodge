@@ -1,0 +1,159 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Wolfcreek Lodge public availability API",
+    "version": "1.0.0",
+    "summary": "Read-only availability and direct-booking price for one stay.",
+    "description": "Two vacation homes in Winthrop, WA, sold as three mutually exclusive configurations: wolf-creek-lodge (the House), wolf-creek-apartment (the Apartment) and wolf-creek-retreat-combo (both let together). Booking the combined listing blocks both units for those dates, and booking either unit blocks the combined listing; the database enforces this, and every answer here applies it. Prices are in USD, for direct booking, and before tax: Washington State sales tax and local lodging tax are added to the booking total. Read-only, no key, no guest data. To book, send the guest to the request form on the property page; there is no booking endpoint for agents. Guide: https://wolfcreeklodge.us/agents",
+    "contact": {
+      "name": "Wolfcreek Lodge",
+      "url": "https://wolfcreeklodge.us/agents"
+    }
+  },
+  "servers": [
+    { "url": "https://wolfcreeklodge.us" }
+  ],
+  "paths": {
+    "/api/booking-requests/check": {
+      "get": {
+        "operationId": "checkStay",
+        "summary": "Check availability and price for one stay",
+        "description": "Whether the property is free for the whole stay, the minimum stay that applies to those dates (it varies by season), the direct-booking price, and which other configurations are free for the same dates if this one is not. Check-in may not be in the past or more than 18 months ahead; stays are limited to 60 nights.",
+        "parameters": [
+          {
+            "name": "property",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["wolf-creek-lodge", "wolf-creek-apartment", "wolf-creek-retreat-combo"]
+            }
+          },
+          {
+            "name": "checkIn",
+            "in": "query",
+            "required": true,
+            "description": "Arrival date, YYYY-MM-DD.",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "checkOut",
+            "in": "query",
+            "required": true,
+            "description": "Departure date, YYYY-MM-DD; after checkIn.",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The answer for that stay.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StayCheck" },
+                "example": {
+                  "propertyId": "wolf-creek-apartment",
+                  "title": "Bright 1BR Retreat on Methow Trail Ski-In/Out",
+                  "maxGuests": 2,
+                  "checkIn": "2027-03-10",
+                  "checkOut": "2027-03-13",
+                  "nights": 3,
+                  "available": true,
+                  "minNightsRequired": 2,
+                  "meetsMinNights": true,
+                  "quote": { "displayTotal": 745, "displayNightlyAverage": 248, "lengthDiscount": null },
+                  "alternatives": []
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request cannot be answered as asked: unknown property, missing or impossible dates, past dates, too far ahead, or too long.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "The check failed on the server.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Whether the API can answer",
+        "responses": {
+          "200": {
+            "description": "Up, and the database responds.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+          },
+          "503": {
+            "description": "The database does not respond.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StayCheck": {
+        "type": "object",
+        "required": ["propertyId", "title", "maxGuests", "checkIn", "checkOut", "nights", "available", "minNightsRequired", "meetsMinNights", "quote", "alternatives"],
+        "properties": {
+          "propertyId": { "type": "string" },
+          "title": { "type": "string" },
+          "maxGuests": { "type": "integer", "description": "How many the property sleeps." },
+          "checkIn": { "type": "string", "format": "date" },
+          "checkOut": { "type": "string", "format": "date" },
+          "nights": { "type": "integer" },
+          "available": { "type": "boolean", "description": "Free for every night of the stay, with the exclusivity rule applied." },
+          "minNightsRequired": { "type": "integer", "description": "The minimum stay that applies to these dates." },
+          "meetsMinNights": { "type": "boolean" },
+          "quote": {
+            "description": "Direct-booking price in USD, before tax. Null if no price could be computed.",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "displayTotal": { "type": "number", "description": "Total for the stay, USD, before tax." },
+                  "displayNightlyAverage": { "type": "number", "description": "Average per night, USD, before tax." },
+                  "lengthDiscount": { "type": ["string", "null"], "description": "The weekly or monthly discount applied, if any." }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "alternatives": {
+            "type": "array",
+            "description": "Only when this property is taken: the other configurations that are free for the same dates.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "propertyId": { "type": "string" },
+                "title": { "type": "string" },
+                "maxGuests": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string", "description": "A sentence a guest can read." } }
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "unavailable"] },
+          "database": { "type": "string", "enum": ["ok", "unreachable"] },
+          "time": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
