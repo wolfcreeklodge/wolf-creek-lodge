@@ -7,6 +7,7 @@ import {
   MCP_TOOLS,
   AVAILABILITY_API_PATH,
   SR20_NOTE,
+  TAX_NOTE,
 } from '../../lib/agent-metadata.js';
 
 // ---------------------------------------------------------------------------
@@ -18,9 +19,6 @@ import {
 // same rows the booking system enforces, like /llms.txt, so it cannot drift
 // from what a guest sees. Shared URLs come from lib/agent-metadata.js.
 //
-// Deliberately silent on tax until the owner settles whether direct quotes
-// are tax-inclusive (/llms.txt says they are; nothing in the pricing code adds
-// any).
 // ---------------------------------------------------------------------------
 
 export const dynamic = 'force-dynamic';
@@ -135,6 +133,7 @@ export default async function AgentsPage() {
               <code>get_pricing</code> tools on the server below.
             </li>
           </ul>
+          <p>{TAX_NOTE}</p>
 
           <h2>How a guest books</h2>
           {formOn ? (

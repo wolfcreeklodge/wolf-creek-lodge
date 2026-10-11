@@ -29,7 +29,7 @@ export const MCP_TOOLS = [
   ['get_area_info', 'Winthrop and the Methow Valley: activities by season, wellness, getting around.'],
   ['get_winter_info', 'Winter specifics: the trail network and grooming, pass prices, the ski bowl, winter road access.'],
   ['get_host_info', 'About the host: Superhost status, years hosting, ratings, co-host.'],
-  ['get_booking_link', 'The Airbnb listing links for a property and the other two.'],
+  ['get_booking_link', 'Where a guest books directly (the request form), optionally checking dates in the same call; Airbnb only as a fallback.'],
 ];
 
 // Public read-only availability and quote for one stay. No auth, no guest
@@ -38,6 +38,13 @@ export const AVAILABILITY_API_PATH = '/api/booking-requests/check';
 export const AVAILABILITY_API_URL = `${ORIGIN}${AVAILABILITY_API_PATH}`;
 
 export const PROPERTY_IDS = ['wolf-creek-lodge', 'wolf-creek-apartment', 'wolf-creek-retreat-combo'];
+
+// Direct quotes are before tax; the owner confirmed 2026-10-11 that taxes are
+// added to direct bookings and reported. Same sentence as TAX_NOTE in
+// mcp-server/server.py.
+export const TAX_NOTE =
+  'Prices are before tax. Washington State sales tax and local lodging tax are added to the ' +
+  'booking total.';
 
 // Same wording as /llms.txt, so agents reading either get one answer.
 export const SR20_NOTE =

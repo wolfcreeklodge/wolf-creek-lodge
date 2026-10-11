@@ -1,6 +1,9 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
+**Last updated:** 2026-10-11 (**Booking request form live, with email sent through the lodge's Outlook
+mailbox; the /contact form, which had never sent anything, fixed; prices labelled before tax
+everywhere; MCP `get_booking_link` sends agents to the request form.** Agent-readiness phases 0-4 are
+done, on branch `agent-readiness-fixes`.) Previous: 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
 bookings entered; Retreat calendar mirrors no longer close the House.** See "CRM and email sync"
 and migration 08 under "Database schema".) Previous: 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
 
@@ -11,6 +14,9 @@ dates can still be requested; they go on a **waitlist**, which in the CRM is sim
 whose status is `waitlisted`. When a waitlisted stay's dates come free, the CRM flags it and Bo can
 email the guest in one click. **Promotions** are drafted and sent from the CRM, only to guests who
 opted in, each with an unsubscribe link and the postal address added by the sender.
+
+**Update 2026-10-11: the form is ON**, with email sent through the lodge's Outlook mailbox (open task
+00). The paragraph below is the 2026-09-27 reasoning for waiting.
 
 **The form is OFF on the live site** (`BOOKING_FORM_ENABLED=false`), and that is deliberate. Nothing
 in this system could send email -- the Microsoft token has `Mail.Read` only -- so every message goes
@@ -589,10 +595,33 @@ Server instructions now state the exclusion constraint and the winter road const
 
 ---
 
+10. **~~The /contact form sent nothing~~ -- fixed 2026-10-11.** `ContactForm.js` was a placeholder:
+    it showed "Thank you for your message!" and dropped the message, so every enquiry made through it
+    was lost, with no record to recover. It now posts to `/api/contact`, which queues a
+    `contact_message` to the owner (migration 09) with Reply-To set to the sender. The thank-you
+    appears only after the server accepts the message.
+
 ## Open tasks, most leverage first
 
-00. **Switch on booking requests (2026-09-27).** Built and tested; waiting on an email provider.
-    Until one exists, the form stays off, because a request would reach the CRM and nobody else.
+000. **Collect and report taxes on direct bookings (owner, 2026-10-11).** Direct quotes are before
+    tax and always were. The site said "taxes included" until 2026-10-11, and `/llms.txt` told agents
+    the same. Every price surface now says before tax: the listing pages, the request form, the
+    guest email, `/agents`, `/llms.txt` and the MCP pricing tools. Still to do: confirm the Washington
+    sales tax rate and any lodging tax that applies at 17 Lucky Louie Rd (WA DOR rate lookup), add tax
+    lines to quotes and confirmations, and give the CRM a per-period report of taxable direct revenue
+    for the excise tax return. Airbnb and Vrbo collect and remit tax on their own bookings, so this
+    covers direct bookings only.
+
+00. **~~Switch on booking requests~~ -- done 2026-10-11, through Outlook rather than Resend.** On the
+    owner's call, `EMAIL_PROVIDER=graph`: `send-email.mjs` sends as the lodge mailbox through
+    Microsoft Graph, using the email sync's stored token. The lodge account granted `Mail.Send` once,
+    through the CRM's one-time sign-in at `/auth/login?mailbox=1`; ordinary sign-ins never ask for it,
+    so no other allowed account is asked to let the app send as them. A test request sent both emails
+    and they arrived, and `BOOKING_FORM_ENABLED=true` is set. The sender stays under
+    `GRAPH_DAILY_LIMIT` (250 a day) and holds the rest. **Promotions should still wait for Resend:**
+    the risk below is unchanged, and a mailbox locked for bulk sending is the booking channel. The
+    Resend steps that follow are kept for that.
+    The original plan, for reference:
     1. Create a Resend account (resend.com; the free tier covers this volume) and verify
        `wolfcreeklodge.us`. It gives SPF and DKIM records to add in Cloudflare DNS. A subdomain such
        as `mail.wolfcreeklodge.us` keeps any sending reputation off the root domain.

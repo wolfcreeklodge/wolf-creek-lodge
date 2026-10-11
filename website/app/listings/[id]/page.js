@@ -359,7 +359,7 @@ Thanks!`
                 <span> / night</span>
               </div>
               <p className="booking-rate-note">
-                Taxes included. No booking fees, no service charges.
+                Plus tax. No booking fees, no service charges.
               </p>
               {displayWeekend && (
                 <p className="pricing-option-detail">Weekend: ${displayWeekend}/night</p>
@@ -451,8 +451,8 @@ Thanks!`
         <section className="listing-section text-center">
           <h2 className="listing-section-title">Ready to Book?</h2>
           <p className="listing-description" style={{ margin: '0 auto 1.5rem', maxWidth: '520px' }}>
-            Email is the fastest way to reach us, and the best rate you will find for this
-            place &mdash; taxes included, no booking fees.
+            Booking direct is the best rate you will find for this place &mdash; no booking
+            fees, no service charges.
           </p>
           <div className="cta-buttons">
             {showRequestForm ? (
