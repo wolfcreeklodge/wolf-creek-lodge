@@ -603,6 +603,33 @@ Server instructions now state the exclusion constraint and the winter road const
 
 ## Open tasks, most leverage first
 
+0000. **Agent readiness (isitagentready.com audit), 2026-10-11.** Phases 0-9 of the handoff are live
+    and verified through the tunnel (45 checks: every URL in every document answers 200, and each
+    skill's digest matches the bytes served). Each document's code lives under
+    `website/app/api/agent/*`, with the paths mapped in `next.config.js` and shared URLs in
+    `lib/agent-metadata.js`:
+    - Link header (api-catalog, service-doc, describedby) on every page
+    - `/agents`, `/openapi.json`, `/api/health`
+    - `/.well-known/api-catalog` (RFC 9727)
+    - `/.well-known/mcp/server-card.json` (SEP-2127 shape: no tool list, SSE remote, the SDK's protocol versions)
+    - `/.well-known/ard.json` and `/.well-known/ai-catalog.json`, identical
+    - `/.well-known/agent-skills/index.json` with two skills
+    - a read-only WebMCP `check_availability` tool
+
+    Specs were fetched fresh on 2026-10-11 and four of the handoff's assumptions had moved: ARD's path
+    is now `ard.json`, the server card has a new shape and no reserved path, the skills field is
+    `digest: "sha256:<hex>"`, and WebMCP is `document.modelContext` with the declarative form
+    attributes dropped.
+
+    Left for the owner:
+    - Cloudflare edge rate limit on `/api/booking-requests/check`
+    - DNSSEC plus the DNS-AID records (Phase 10)
+    - optionally, a Chrome origin-trial token so WebMCP reaches real visitors
+
+    Markdown for Agents is not on this plan, and the middleware fallback is deferred. OAuth
+    discovery, protected-resource metadata and auth.md are deferred by decision until a write API
+    sits behind the Guardian agent.
+
 000. **Collect and report taxes on direct bookings (owner, 2026-10-11).** Direct quotes are before
     tax and always were. The site said "taxes included" until 2026-10-11, and `/llms.txt` told agents
     the same. Every price surface now says before tax: the listing pages, the request form, the

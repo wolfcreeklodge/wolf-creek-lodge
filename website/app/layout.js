@@ -2,6 +2,7 @@ import './globals.css';
 import Link from 'next/link';
 import { MobileNav } from './MobileNav';
 import { BookingTracker } from './components/BookingTracker';
+import { AgentTools } from './components/AgentTools';
 import {
   SeasonDialog,
   SeasonProvider,
@@ -105,6 +106,12 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Agent discovery: the ARD manifest (rel="ard", ARD v0.91) and its
+            predecessor path (rel="ai-catalog", the AI Catalog spec), same
+            document at both. Elements here rather than in the Link header,
+            which carries only registered relation types (next.config.js). */}
+        <link rel="ard" href="/.well-known/ard.json" type="application/json" />
+        <link rel="ai-catalog" href="/.well-known/ai-catalog.json" type="application/json" />
       </head>
       <body>
         <SeasonProvider
@@ -145,6 +152,7 @@ export default function RootLayout({ children }) {
           data-host-url="https://wolfcreeklodge.us/stats"
         />
         <BookingTracker />
+        <AgentTools />
       </body>
     </html>
   );
