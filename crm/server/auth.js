@@ -59,6 +59,19 @@ const ALLOWED_EMAILS = (process.env.CRM_ALLOWED_EMAILS || '').split(',').map(e =
 // account on 2026-08-27 silently moved the sync to that inbox for a month: no
 // lodge mail was synced, and personal mail was.
 const SYNC_MAILBOX = (process.env.MAILBOX_EMAIL || 'wolfcreeklodge@outlook.com').trim().toLowerCase();
+
+// Every sign-in asks for these. Mail.Read is what the sync needs.
+const SIGN_IN_SCOPES = ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'];
+
+// Asked for only by the one-time "connect mailbox" sign-in,
+// /auth/login?mailbox=1, made with the lodge account: Mail.Send lets
+// scripts/send-email.mjs send guest mail from the lodge's own Outlook address.
+// Not part of every sign-in, because that would ask every allowed account,
+// including personal ones, for permission to send mail as them -- permission
+// nothing would use, since only the sync mailbox's tokens are ever stored.
+// Microsoft remembers the consent per account, so later ordinary sign-ins by
+// the lodge account keep the ability to send.
+const MAILBOX_SCOPES = [...SIGN_IN_SCOPES, 'Mail.Send'];
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 
 // A "secure" cookie is never sent over plain HTTP. Keying this off NODE_ENV
@@ -114,9 +127,14 @@ export function setupAuth(app) {
     }
 
     try {
+      const connectMailbox = req.query.mailbox === '1';
       const authUrl = await msalClient.getAuthCodeUrl({
-        scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
+        scopes: connectMailbox ? MAILBOX_SCOPES : SIGN_IN_SCOPES,
         redirectUri: REDIRECT_URI,
+        // Carried through Microsoft and back, so the callback redeems the code
+        // for the same scopes it was issued for.
+        state: connectMailbox ? 'mailbox' : 'signin',
+        ...(connectMailbox ? { loginHint: SYNC_MAILBOX } : {}),
       });
       res.redirect(authUrl);
     } catch (err) {
@@ -143,7 +161,7 @@ export function setupAuth(app) {
     try {
       const result = await msalClient.acquireTokenByCode({
         code,
-        scopes: ['openid', 'profile', 'email', 'User.Read', 'Mail.Read', 'offline_access'],
+        scopes: req.query.state === 'mailbox' ? MAILBOX_SCOPES : SIGN_IN_SCOPES,
         redirectUri: REDIRECT_URI,
       });
 

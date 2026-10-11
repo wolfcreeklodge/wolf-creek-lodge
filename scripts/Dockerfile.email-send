@@ -1,6 +1,8 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY package.json package-lock.json* ./
+# The email sync's package set: pg plus @azure/msal-node, which the graph
+# provider needs to turn the stored refresh token into a send token.
+COPY package-email-sync.json package.json
 RUN npm install
 COPY send-email.mjs email-templates.mjs ./
 # Every 30 seconds, not every 15 minutes like the sync workers: a guest who
