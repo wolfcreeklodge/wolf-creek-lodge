@@ -153,10 +153,18 @@ async function acquireAccessToken(refreshToken) {
       : null,
   };
 
-  // MSAL may return a new refresh token via the token cache
-  // The refreshToken used is typically still valid, but update if a new one comes back
-  if (result.refreshToken) {
-    tokenUpdates.refresh_token = result.refreshToken;
+  // Microsoft rotates refresh tokens on use. MSAL never puts the new one on
+  // the result (result.refreshToken is always undefined, the same trap
+  // crm/server/auth.js documents), so this used to keep reusing the token from
+  // the last sign-in until it expired, about 90 days on. Read it from the cache.
+  try {
+    const cache = JSON.parse(cca.getTokenCache().serialize());
+    const rotated = Object.values(cache.RefreshToken || {})[0]?.secret;
+    if (rotated && rotated !== refreshToken) {
+      tokenUpdates.refresh_token = rotated;
+    }
+  } catch {
+    // Keep the stored token; it is still valid.
   }
 
   await updateSyncState(tokenUpdates);

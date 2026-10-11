@@ -17,6 +17,7 @@ const KIND_LABEL = {
   owner_new_request: 'New request (to you)',
   dates_available: 'Dates free (to guest)',
   promotion: 'Promotion',
+  contact_message: 'Contact form (to you)',
 };
 
 const STATUS_STYLE = {

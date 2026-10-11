@@ -1,5 +1,5 @@
 """
-Wolfridge Retreats MCP Server
+Wolfcreek Lodge MCP Server
 =============================
 A Model Context Protocol server exposing vacation-rental tools, resources, and
 prompts for the Wolf Creek Lodge properties in Winthrop, WA.
@@ -29,10 +29,22 @@ import db
 _transport = os.environ.get("MCP_TRANSPORT", "stdio")
 _port = int(os.environ.get("MCP_PORT", "8081"))
 
+SITE = "https://wolfcreeklodge.us"
+# Mirrors the website's switch (BOOKING_FORM_ENABLED in docker-compose.yml).
+# When the request form is live, that is where agents send guests.
+_FORM_ON = os.environ.get("BOOKING_FORM_ENABLED", "false").strip().lower() == "true"
+
+# Direct quotes are before tax; the owner confirmed 2026-10-11 that taxes are
+# added to direct bookings and reported.
+TAX_NOTE = (
+    "Prices are before tax. Washington State sales tax and local lodging tax are "
+    "added to the booking total."
+)
+
 mcp = FastMCP(
-    "wolfridge-retreats",
+    "wolfcreek-lodge",
     instructions=(
-        "Vacation-rental assistant for Wolfridge Retreats in Winthrop, WA (Methow Valley). "
+        "Vacation-rental assistant for Wolfcreek Lodge in Winthrop, WA (Methow Valley). "
         "Two physical units, three bookable configurations, and they are MUTUALLY EXCLUSIVE: "
         "wolf-creek-retreat-combo is the house and the apartment let together, so booking it "
         "blocks wolf-creek-lodge and wolf-creek-apartment for those dates, and booking either "
@@ -40,8 +52,10 @@ mcp = FastMCP(
         "rejected rather than quietly accepted. "
         "Rates are seasonal: always pass check_in and check_out to get_pricing rather than "
         "quoting a flat nightly figure. Never assert a date is available without calling "
-        "check_availability. There is no automated checkout: bookings are confirmed by a human "
-        "via get_booking_link. "
+        "check_availability. There is no automated checkout. Guests book directly: "
+        "get_booking_link returns where (the booking request form on each property page), "
+        "and the owner confirms each request by hand. Do not submit requests for a guest. "
+        "Send a guest to Airbnb only if they ask for it. Quoted prices are before tax. "
         "Winter note: the North Cascades Highway (SR 20) closes every winter, so guests driving "
         "from Seattle between roughly December and late April must take the southern route. "
         "Call get_winter_info before advising on a winter trip."
@@ -80,6 +94,66 @@ def _fmt_price(amount: int | float) -> str:
     return f"${amount:,.0f}"
 
 
+def _booking_route(property_id: str) -> dict:
+    """Where a guest books this property directly. Never Airbnb: that is a
+    fallback for a guest who asks for it, returned separately as airbnb_url."""
+    if _FORM_ON:
+        return {
+            "method": "request_form",
+            "url": f"{SITE}/listings/{property_id}#request-dates",
+            "how": (
+                "Send the guest to this page. They pick dates, see availability and the "
+                "price, and send a request; the owner confirms it by email, by hand, and "
+                "the dates are not held until then. Do not submit the request on the "
+                "guest's behalf."
+            ),
+        }
+    cfg = db.get_site_config() or {}
+    return {
+        "method": "email",
+        "email": cfg.get("contact_email") or "wolfcreeklodge@outlook.com",
+        "url": f"{SITE}/contact",
+        "how": "The guest emails dates, party size and which property; the owner confirms by hand.",
+    }
+
+
+def _stay_check(prop: dict, check_in: str, check_out: str) -> dict:
+    """Availability for one stay: dates, the minimum stay that applies to those
+    dates (seasonal, not just the base minimum), and conflicts under the
+    exclusivity rule. Returns {"error": ...} for input the guest must change."""
+    try:
+        ci = datetime.strptime(check_in, "%Y-%m-%d")
+        co = datetime.strptime(check_out, "%Y-%m-%d")
+    except ValueError:
+        return {"error": "Dates must be in YYYY-MM-DD format."}
+    if co <= ci:
+        return {"error": "check_out must be after check_in."}
+    nights = (co - ci).days
+    min_req = db.required_min_nights(prop["id"], check_in, check_out) or prop["min_nights"]
+    if nights < min_req:
+        return {
+            "error": (
+                f"Minimum stay for {prop['title']} on these dates is {min_req} night(s). "
+                f"Requested: {nights} night(s)."
+            ),
+            "min_nights_required": min_req,
+        }
+    if nights > prop["max_nights"]:
+        return {
+            "error": (
+                f"Maximum stay for {prop['title']} is {prop['max_nights']} nights. "
+                f"Requested: {nights} nights."
+            ),
+        }
+    conflicts = db.check_reservation_overlap(prop["id"], check_in, check_out)
+    return {
+        "nights": nights,
+        "min_nights_required": min_req,
+        "status": "unavailable" if conflicts else "available",
+        "conflicts": len(conflicts),
+    }
+
+
 def _property_summary(prop: dict) -> dict:
     """Return a compact summary of a property for listing views."""
     p = prop["pricing"]
@@ -109,7 +183,7 @@ def _property_summary(prop: dict) -> dict:
 
 @mcp.tool(
     description=(
-        "Search available Wolfridge Retreats properties in Winthrop, WA. "
+        "Search available Wolfcreek Lodge properties in Winthrop, WA. "
         "Returns a structured list with descriptions, capacity, amenities, "
         "ratings, and pricing for each property. Optionally filter by minimum "
         "guest capacity."
@@ -141,7 +215,7 @@ def search_properties(guests: int | None = None) -> dict:
 
 @mcp.tool(
     description=(
-        "Get full details for a specific Wolfridge Retreats property. "
+        "Get full details for a specific Wolfcreek Lodge property. "
         "Returns description, bedrooms, bathrooms, amenities, house rules, "
         "highlights, pricing, and reviews. "
         "Valid property IDs: wolf-creek-lodge, wolf-creek-apartment, wolf-creek-retreat-combo."
@@ -178,7 +252,7 @@ def get_property_details(property_id: str) -> dict:
 
 @mcp.tool(
     description=(
-        "Quote pricing for a Wolfridge Retreats property. Pass check_in and check_out "
+        "Quote pricing for a Wolfcreek Lodge property. Pass check_in and check_out "
         "(YYYY-MM-DD) for an exact, date-aware quote: rates vary by season and by day of "
         "week, so a date-less quote is an approximation only. Falls back to a flat "
         "nightly estimate when only 'nights' is given. Returns the per-night breakdown, "
@@ -259,6 +333,7 @@ def get_pricing(
                         "Friday and Saturday nights price at the weekend rate. "
                         "This quote does not confirm availability: call check_availability."
                     ),
+                    "taxes": TAX_NOTE,
                 }
 
     p = prop["pricing"]
@@ -278,6 +353,7 @@ def get_pricing(
         "min_nights": prop["min_nights"],
         "max_nights": prop["max_nights"],
         "currency": "USD",
+        "taxes": TAX_NOTE,
     }
 
     if p.get("nightly_high"):
@@ -316,10 +392,11 @@ def get_pricing(
 
 @mcp.tool(
     description=(
-        "Check availability for a Wolfridge Retreats property. Takes property_id, "
+        "Check availability for a Wolfcreek Lodge property. Takes property_id, "
         "check_in date (YYYY-MM-DD), and check_out date (YYYY-MM-DD). "
-        "Checks against the reservation database for conflicts. Also explains the mutual "
-        "exclusion constraint between listings. "
+        "Checks against the reservation database for conflicts, applies the minimum stay "
+        "for those dates (it varies by season), and returns where the guest books "
+        "directly. Also explains the mutual exclusion constraint between listings. "
         "Valid property IDs: wolf-creek-lodge, wolf-creek-apartment, wolf-creek-retreat-combo."
     ),
 )
@@ -329,57 +406,29 @@ def check_availability(property_id: str, check_in: str, check_out: str) -> dict:
     if not prop:
         return {"error": f"Unknown property_id '{property_id}'."}
 
-    # Validate date formats
-    try:
-        ci = datetime.strptime(check_in, "%Y-%m-%d")
-        co = datetime.strptime(check_out, "%Y-%m-%d")
-        if co <= ci:
-            return {"error": "check_out must be after check_in."}
-        nights = (co - ci).days
-    except ValueError:
-        return {"error": "Dates must be in YYYY-MM-DD format."}
+    # The database applies the exclusivity rule, so this answer matches the
+    # website's and its booking form's.
+    stay = _stay_check(prop, check_in, check_out)
+    if "error" in stay:
+        return stay
 
-    if nights < prop["min_nights"]:
-        return {
-            "error": (
-                f"Minimum stay for {prop['title']} is {prop['min_nights']} night(s). "
-                f"Requested: {nights} night(s)."
-            ),
-        }
-    if nights > prop["max_nights"]:
-        return {
-            "error": (
-                f"Maximum stay for {prop['title']} is {prop['max_nights']} nights. "
-                f"Requested: {nights} nights."
-            ),
-        }
-
-    # Conflicting reservations, on this listing and on the mutually exclusive
-    # ones. The database applies the exclusivity rule, so this answer matches
-    # the website's.
-    conflicts = db.check_reservation_overlap(property_id, check_in, check_out)
-
-    if conflicts:
-        return {
-            "property_id": property_id,
-            "title": prop["title"],
-            "check_in": check_in,
-            "check_out": check_out,
-            "nights": nights,
-            "status": "unavailable",
-            "message": f"The property has {len(conflicts)} conflicting reservation(s) for the requested dates.",
-            "airbnb_url": prop["airbnb_url"],
-        }
-
+    available = stay["status"] == "available"
     return {
         "property_id": property_id,
         "title": prop["title"],
         "check_in": check_in,
         "check_out": check_out,
-        "nights": nights,
-        "status": "available",
-        "message": "No conflicting reservations found. The property appears available for these dates.",
+        "nights": stay["nights"],
+        "min_nights_required": stay["min_nights_required"],
+        "status": stay["status"],
+        "message": (
+            "No conflicting reservations found. The property appears available for these dates."
+            if available
+            else f"The property has {stay['conflicts']} conflicting reservation(s) for the requested dates."
+        ),
+        "book_direct": _booking_route(property_id),
         "airbnb_url": prop["airbnb_url"],
+        "airbnb_note": "Only if the guest asks for Airbnb. Booking direct is the preferred route.",
         "mutual_exclusion_note": (
             "Important: The House (wolf-creek-lodge) and Apartment (wolf-creek-apartment) "
             "share dates with the Retreat (wolf-creek-retreat-combo). If one is booked, "
@@ -476,31 +525,49 @@ def get_host_info() -> dict:
 
 @mcp.tool(
     description=(
-        "Get the Airbnb booking link for a specific property. Also returns links for "
-        "all three listings so the guest can compare. "
+        "Get where a guest books a property directly: the booking request form on its page "
+        "on wolfcreeklodge.us. Pass check_in and check_out (YYYY-MM-DD) to also check those "
+        "dates in the same call. Returns the direct links for all three listings so the guest "
+        "can compare, and the Airbnb link only as a fallback for a guest who asks for it. "
         "Valid property IDs: wolf-creek-lodge, wolf-creek-apartment, wolf-creek-retreat-combo."
     ),
 )
-def get_booking_link(property_id: str) -> dict:
-    """Return Airbnb URL(s) for the requested property."""
+def get_booking_link(
+    property_id: str,
+    check_in: str | None = None,
+    check_out: str | None = None,
+) -> dict:
+    """Return the direct booking route, and availability when dates are given."""
     prop = db.get_property(property_id)
     if not prop:
         return {"error": f"Unknown property_id '{property_id}'."}
 
-    all_properties = db.get_all_properties()
-    return {
+    route = _booking_route(property_id)
+    result = {
         "property_id": property_id,
         "title": prop["title"],
-        "booking_url": prop["airbnb_url"],
+        "booking_url": route["url"],
+        "book_direct": route,
+        "taxes": TAX_NOTE,
         "all_listings": {
             p["id"]: {
                 "title": p["title"],
-                "url": p["airbnb_url"],
+                "url": _booking_route(p["id"])["url"],
                 "capacity": f"{p['capacity']} guests",
             }
-            for p in all_properties
+            for p in db.get_all_properties()
         },
+        "airbnb_url": prop["airbnb_url"],
+        "airbnb_note": "Only if the guest asks for Airbnb. Booking direct is the preferred route.",
     }
+
+    if check_in or check_out:
+        if not (check_in and check_out):
+            result["availability"] = {"error": "Pass both check_in and check_out to check dates."}
+        else:
+            result["availability"] = {"check_in": check_in, "check_out": check_out,
+                                      **_stay_check(prop, check_in, check_out)}
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -640,7 +707,7 @@ def get_winter_info() -> dict:
 @mcp.resource(
     uri="properties://list",
     name="All Properties",
-    description="Summary list of all Wolfridge Retreats properties.",
+    description="Summary list of all Wolfcreek Lodge properties.",
 )
 def list_properties() -> dict:
     """Resource: summary of all properties."""
@@ -671,7 +738,7 @@ def property_resource(property_id: str) -> dict:
 @mcp.prompt(
     name="plan_trip",
     description=(
-        "Help an AI agent plan a trip to Winthrop, WA staying at Wolfridge Retreats. "
+        "Help an AI agent plan a trip to Winthrop, WA staying at Wolfcreek Lodge. "
         "Gathers group size, dates, interests, and budget to recommend the best property "
         "and build an itinerary."
     ),
@@ -679,7 +746,7 @@ def property_resource(property_id: str) -> dict:
 def plan_trip() -> str:
     """Return a prompt template for trip planning."""
     return (
-        "You are a helpful travel planning assistant for Wolfridge Retreats in "
+        "You are a helpful travel planning assistant for Wolfcreek Lodge in "
         "Winthrop, WA (Methow Valley). Help the user plan their trip by asking:\n\n"
         "1. **Group size** \u2013 How many guests? (This determines which property fits.)\n"
         "2. **Dates** \u2013 When are you thinking of visiting? (Season affects activities.)\n"

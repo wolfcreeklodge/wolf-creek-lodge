@@ -20,6 +20,7 @@ export default async function sitemap() {
     { url: `${SITE}/area`, priority: 0.7, changeFrequency: 'monthly' },
     { url: `${SITE}/about`, priority: 0.5, changeFrequency: 'yearly' },
     { url: `${SITE}/contact`, priority: 0.6, changeFrequency: 'yearly' },
+    { url: `${SITE}/agents`, priority: 0.4, changeFrequency: 'monthly' },
   ];
 
   return [

@@ -212,7 +212,7 @@ export default function BookingRequestForm({ properties, defaultPropertyId, cont
             <strong>Open.</strong> {ready.nights} night{ready.nights === 1 ? '' : 's'}
             {ready.quote && (
               <>
-                , {money(ready.quote.displayTotal)} booked direct
+                , {money(ready.quote.displayTotal)} booked direct, before tax
                 {ready.nights > 1 && <> (about {money(ready.quote.displayNightlyAverage)} a night)</>}
                 {ready.quote.lengthDiscount && <>, {ready.quote.lengthDiscount.toLowerCase()}</>}
               </>

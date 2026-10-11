@@ -59,6 +59,9 @@ services:
     environment:
       MCP_TRANSPORT: sse
       MCP_PORT: "8081"
+      # get_booking_link sends guests to the request form when this is on,
+      # the same switch the website uses.
+      BOOKING_FORM_ENABLED: ${BOOKING_FORM_ENABLED:-false}
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
     depends_on:
       database:
@@ -132,6 +135,12 @@ services:
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-log}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      # For EMAIL_PROVIDER=graph: send as the lodge's Outlook mailbox with the
+      # token the CRM stores for the email sync.
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      MAILBOX_EMAIL: ${MAILBOX_EMAIL:-wolfcreeklodge@outlook.com}
       EMAIL_FROM: ${EMAIL_FROM:-Wolfcreek Lodge <stay@wolfcreeklodge.us>}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-wolfcreeklodge@outlook.com}
       SITE_URL: ${SITE_URL:-https://wolfcreeklodge.us}
