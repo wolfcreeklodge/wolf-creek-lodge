@@ -9,6 +9,9 @@ __pycache__/
 
 cloudflared/
 backups/
+# Local cache the Cloudflare `cf` CLI writes in its working directory (account
+# lookup). Not a credential, but not project source either.
+.cloudflare/
 
 
 # Photo assets: ~549 MB, and the only copies in existence.

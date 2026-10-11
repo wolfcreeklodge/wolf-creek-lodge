@@ -170,6 +170,10 @@ export default async function AgentsPage() {
               <a href="/llms.txt">{ORIGIN}/llms.txt</a>
             </li>
             <li>
+              Every page is also available as Markdown: request it with{' '}
+              <code>Accept: text/markdown</code>.
+            </li>
+            <li>
               Structured data: the homepage carries a schema.org graph with LodgingBusiness,
               VacationRental and per-season Offer nodes.
             </li>

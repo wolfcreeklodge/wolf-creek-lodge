@@ -75,10 +75,11 @@ const MAILBOX_SCOPES = [...SIGN_IN_SCOPES, 'Mail.Send'];
 const DEV_BYPASS = process.env.DEV_BYPASS_AUTH === 'true';
 
 // A "secure" cookie is never sent over plain HTTP. Keying this off NODE_ENV
-// meant that running production behind http://localhost (which is how this
-// admin-only CRM is reached now that the crm.wolfcreeklodge.us tunnel route is
-// gone) set a cookie the browser silently refused to store, so the session was
-// lost between the OAuth callback and the next request and login just looped.
+// meant that running production behind http://localhost (how the CRM was
+// reached while the crm.wolfcreeklodge.us tunnel route was briefly gone, before
+// it was re-added on 2026-08-26; sign-in now goes through that route) set a
+// cookie the browser silently refused to store, so the session was lost
+// between the OAuth callback and the next request and login just looped.
 // Follow the redirect URI's scheme instead, which is the thing that actually
 // determines whether the browser will keep it.
 const USE_SECURE_COOKIE = (process.env.MICROSOFT_REDIRECT_URI || '').startsWith('https://');

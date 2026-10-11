@@ -1,9 +1,13 @@
 # Wolf Creek Lodge - implementation status
 
-**Last updated:** 2026-10-11 (**Booking request form live, with email sent through the lodge's Outlook
-mailbox; the /contact form, which had never sent anything, fixed; prices labelled before tax
-everywhere; MCP `get_booking_link` sends agents to the request form.** Agent-readiness phases 0-4 are
-done, on branch `agent-readiness-fixes`.) Previous: 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
+**Last updated:** 2026-10-11, end of day:
+- **Booking request form live,** with email sent through the lodge's Outlook mailbox.
+- **The /contact form, which had never sent anything, fixed.**
+- **Prices labelled before tax everywhere,** and the WA tax rates researched (10.4%, task 000).
+- **MCP `get_booking_link` sends agents to the request form.**
+- **Agent readiness:** all handoff phases done, scoring isitagentready **Level 4**.
+- **Cloudflare zone hardened:** rate limit, HTTPS-only, TLS 1.2, DNSSEC pending the registry. See
+  task 0000. Previous: 2026-09-28 (**Email sync fixed after a month on the wrong inbox; four missed Vrbo
 bookings entered; Retreat calendar mirrors no longer close the House.** See "CRM and email sync"
 and migration 08 under "Database schema".) Previous: 2026-09-27 (**Booking requests with a live availability check, a waitlist, and promotions -- built, tested, and switched off for guests until email can send.**)
 
@@ -249,7 +253,7 @@ All via `docker-compose.yml` at project root. `docker compose up -d` brings up e
 | `wcl-crm` | `./crm` | `127.0.0.1:8082` -> 3000 | Express + Vite SPA. Published at `crm.wolfcreeklodge.us`. Sign-in works only through the tunnel: the app sends one redirect URI and it is the https one. |
 | `wcl-ical-sync` | `./scripts` (`sync-ical.mjs`) | none | pulls Airbnb iCal into `reservations` |
 | `wcl-email-sync` | `./scripts` (`Dockerfile.email-sync`) | none | Microsoft Graph -> `emails` |
-| `wcl-email-send` | `./scripts` (`Dockerfile.email-send`) | none | **new 2026-09-27.** Drains `outbound_emails` every 30s. `EMAIL_PROVIDER=log` (default) renders and records without sending; `resend` sends. The only container that holds a provider key. |
+| `wcl-email-send` | `./scripts` (`Dockerfile.email-send`) | none | **new 2026-09-27.** Drains `outbound_emails` every 30s. **`EMAIL_PROVIDER=graph` since 2026-10-11**: sends as the lodge Outlook mailbox through Microsoft Graph, capped at 250 a day. `log` renders and records without sending; `resend` is wired but unused. |
 | `wcl-cloudflared` | `cloudflare/cloudflared:latest` | none | mounts `./cloudflared` read-only |
 
 ### Cloudflare tunnel
@@ -351,7 +355,10 @@ has no refresh token (which would mean `offline_access` was not consented).
 production it was always `true`. A secure cookie is not stored by the browser over plain HTTP, and
 this CRM is reached over `http://localhost:8082` now that the `crm.wolfcreeklodge.us` route is
 gone -- so the session vanished between the OAuth callback and the next request. It now follows the
-scheme of `MICROSOFT_REDIRECT_URI`.
+scheme of `MICROSOFT_REDIRECT_URI`. *(Superseded 2026-08-26: the route was re-added, and
+`MICROSOFT_REDIRECT_URI` is `https://crm.wolfcreeklodge.us/auth/callback`, so every CRM sign-in,
+from any computer, completes through the public route. Removing it locks both allowed accounts
+out.)*
 
 Also changed: `MICROSOFT_REDIRECT_URI` is now set explicitly in `.env`
 (`http://localhost:8082/auth/callback`); the compose default no longer points at the deleted
@@ -621,23 +628,57 @@ Server instructions now state the exclusion constraint and the winter road const
     `digest: "sha256:<hex>"`, and WebMCP is `document.modelContext` with the declarative form
     attributes dropped.
 
-    Left for the owner:
-    - Cloudflare edge rate limit on `/api/booking-requests/check`
-    - DNSSEC plus the DNS-AID records (Phase 10)
-    - optionally, a Chrome origin-trial token so WebMCP reaches real visitors
+    **Markdown for agents (Phase 1b), 2026-10-11.** Cloudflare's edge converter is not available on
+    the Free plan (`content_converter` is not editable), so `middleware.js` sends page requests that
+    prefer `text/markdown` to `/api/agent/markdown`. That route renders the page through the
+    server and converts its `<main>` with turndown. With it, the isitagentready.com level went
+    from 2 to **4, "Agent-Integrated"**.
 
-    Markdown for Agents is not on this plan, and the middleware fallback is deferred. OAuth
+    **Cloudflare zone, hardened 2026-10-11** (verified from outside):
+    - Rate limiting rule on `/api/booking-requests/check`: 30 per 10 s per IP, block 10 s. The burst
+      test got 30 x 200, then 429. This is the Free plan's only rule.
+    - Always Use HTTPS on: `http://` returns 301 to `https://`.
+    - Minimum TLS 1.2: TLS 1.0 and 1.1 are refused with a protocol-version alert.
+    - DNSSEC enabled; Cloudflare is the registrar, so it submits the DS. Still **pending the `.us`
+      registry** on the day; recheck that resolvers set AD, then rerun the audit for DNS-AID.
+    - DNS-AID SVCB records `_index._agents` -> `wolfcreeklodge.us.` (`alpn="h2,h3"`) and `_mcp._agents`
+      -> `mcp.wolfcreeklodge.us.` (`alpn="mcp,h2,h3"`), both `port=443`.
+    - Email Address Obfuscation off (see task 0 below), and Browser Cache TTL set to respect the
+      origin's headers. Before that it was a 4-hour floor that overrode the site's shorter caches.
+
+    Still open: optionally, a Chrome origin-trial token so WebMCP reaches real visitors. OAuth
     discovery, protected-resource metadata and auth.md are deferred by decision until a write API
-    sits behind the Guardian agent.
+    sits behind the Guardian agent. The Free plan's limits (one rate-limit rule, no edge Markdown)
+    are a known reason to upgrade later.
 
 000. **Collect and report taxes on direct bookings (owner, 2026-10-11).** Direct quotes are before
     tax and always were. The site said "taxes included" until 2026-10-11, and `/llms.txt` told agents
     the same. Every price surface now says before tax: the listing pages, the request form, the
-    guest email, `/agents`, `/llms.txt` and the MCP pricing tools. Still to do: confirm the Washington
-    sales tax rate and any lodging tax that applies at 17 Lucky Louie Rd (WA DOR rate lookup), add tax
-    lines to quotes and confirmations, and give the CRM a per-period report of taxable direct revenue
-    for the excise tax return. Airbnb and Vrbo collect and remit tax on their own bookings, so this
-    covers direct bookings only.
+    guest email, `/agents`, `/llms.txt` and the MCP pricing tools.
+
+    **Rates, researched 2026-10-11 for Q4 2026.** The address is unincorporated Okanogan County,
+    **not** the Town of Winthrop.
+    - DOR location code **2424**, "Okanogan PTBA".
+    - Retail sales tax **8.4%** (6.5% state + 1.9% local), confirmed with DOR's address lookup.
+    - Special hotel/motel tax **2%**, from DOR's Q4 2026 lodging rate table.
+    - **10.4% in total on stays under 30 nights.**
+    - No convention center or tourism promotion charges.
+    - Cleaning, pet and other stay fees are taxable as lodging.
+    - A stay contracted in advance for 30+ nights is exempt from the start; without that, nights 1-29
+      are taxed.
+
+    Reported on the DOR combined excise return under code 2424: local sales tax, transient rental
+    income, and the 2% special hotel/motel tax; B&O is classed as Retailing. Airbnb income is still
+    reported, with a deduction for sales the facilitator collected on. Okanogan County also requires
+    an annual **Nightly Rental License** ($165, UBI, $1M liability insurance, fire-exit floor plan).
+    Inside the Methow Review District it may need proof of legal operation before 2005-09-09; whether
+    that applies here is unconfirmed. Rates can change quarterly.
+
+    Still to do:
+    - add the tax lines to quotes and confirmations, storing rates with the quarter they apply to;
+    - give the CRM a per-period report of taxable direct revenue, matching those return lines.
+
+    Airbnb and Vrbo collect and remit tax on their own bookings, so this covers direct bookings only.
 
 00. **~~Switch on booking requests~~ -- done 2026-10-11, through Outlook rather than Resend.** On the
     owner's call, `EMAIL_PROVIDER=graph`: `send-email.mjs` sends as the lodge mailbox through
@@ -664,7 +705,9 @@ Server instructions now state the exclusion constraint and the winter road const
     rejected for promotions: consumer outlook.com accounts have low daily limits, and bulk mail from
     one risks locking the mailbox that *is* the booking channel.
 
-0. **TODAY (2026-08-26): turn off Cloudflare Email Address Obfuscation.** Cloudflare is rewriting
+0. **~~Turn off Cloudflare Email Address Obfuscation~~ -- done 2026-10-11** (through the `cf` CLI;
+   zero `__cf_email__` placeholders on `/`, `/contact` and `/agents` afterwards). The original note,
+   from 2026-08-26: Cloudflare is rewriting
    every email address in the site HTML into a `[email protected]` placeholder that only
    JavaScript decodes. Email is now the primary booking channel, so anything without JS --
    crawlers included -- cannot see the address. `/llms.txt` is unaffected, being plain text.

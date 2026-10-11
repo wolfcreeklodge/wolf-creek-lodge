@@ -55,8 +55,30 @@ They are stored server-side and pushed to the agent at connection time, **overri
 `cloudflared/config.yml`**. To change routing, edit the dashboard. The local file is documentation
 and backup only.
 
-Routes must target the compose **service name** (`website:3000`, `mcp-server:8081`). Inside the
-cloudflared container, `localhost` is that container.
+Routes must target the compose **service name**. Inside the cloudflared container, `localhost` is
+that container. The three public hostnames:
+- `wolfcreeklodge.us` -> `website:3000`
+- `mcp.wolfcreeklodge.us` -> `mcp-server:8081`
+- `crm.wolfcreeklodge.us` -> `crm:3000`
+
+**Keep the `crm` route.** CRM sign-in completes there (`MICROSOFT_REDIRECT_URI` is
+`https://crm.wolfcreeklodge.us/auth/callback`), from any computer. Removing it locks out both
+allowed accounts. To hide it from strangers, put Cloudflare Access in front instead.
+
+### Cloudflare zone settings (Free plan; set 2026-10-11)
+
+- Always Use HTTPS on. Minimum TLS 1.2.
+- DNSSEC on; Cloudflare is the registrar, so it publishes the DS itself.
+- Email Address Obfuscation **off**: on, it hides the contact address from agents and non-JS
+  crawlers.
+- Browser Cache TTL respects origin headers.
+- The plan's **single** rate-limiting rule protects `/api/booking-requests/check`. A second edge rule,
+  or Cloudflare's own Markdown for Agents, needs a paid plan; the site serves Markdown itself
+  (`middleware.js`).
+- DNS-AID SVCB records sit at `_index._agents` and `_mcp._agents`.
+
+`cf` (the Cloudflare CLI) works for reading and changing these, but note where it is installed: an
+install made from Claude's shell is not visible to the owner's own terminal.
 
 Earlier revisions of this file claimed the local config was also required. That was wrong and the
 May migration disproved it.
