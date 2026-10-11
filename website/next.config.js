@@ -19,24 +19,36 @@ const nextConfig = {
       // path is a plain 404, as it was before. Shared URLs and headers live in
       // lib/agent-metadata.js.
       { source: '/.well-known/ai-catalog.json', destination: '/api/agent/ai-catalog' },
+      { source: '/.well-known/ard.json', destination: '/api/agent/ai-catalog' },
       { source: '/.well-known/api-catalog', destination: '/api/agent/api-catalog' },
       { source: '/.well-known/mcp/server-card.json', destination: '/api/agent/mcp-server-card' },
       { source: '/.well-known/agent-skills/index.json', destination: '/api/agent/skills-index' },
+      { source: '/.well-known/agent-skills/:name/SKILL.md', destination: '/api/agent/skill/:name' },
+      // OpenAPI description of the public availability API (service-desc in
+      // the api-catalog), at a path robots.txt does not disallow.
+      { source: '/openapi.json', destination: '/api/agent/openapi' },
     ];
   },
 
-  // RFC 8288 Link header on every page, pointing agents at the guide and the
-  // plain-text summary without their having to parse HTML. Only registered
-  // relation types, and only targets that answer 200 today: rel="api-catalog"
-  // joins in the same change that publishes /.well-known/api-catalog.
+  // RFC 8288 Link header on every page, pointing agents at the API catalog,
+  // the guide and the plain-text summary without their having to parse HTML.
+  // Only registered relation types (api-catalog is RFC 9727's), and only
+  // targets that answer 200. The ARD manifest's own rel values are not
+  // registered, so they are <link> elements in the page head instead
+  // (app/layout.js).
   async headers() {
     return [
       {
-        source: '/((?!api/|_next/|stats/).*)',
+        // Pages only: not the API, assets, analytics, or the /.well-known/
+        // documents, which set their own Link where a spec asks for one.
+        source: '/((?!api/|_next/|stats/|\\.well-known/).*)',
         headers: [
           {
             key: 'Link',
-            value: '</agents>; rel="service-doc", </llms.txt>; rel="describedby"; type="text/plain"',
+            value:
+              '</.well-known/api-catalog>; rel="api-catalog", ' +
+              '</agents>; rel="service-doc", ' +
+              '</llms.txt>; rel="describedby"; type="text/plain"',
           },
         ],
       },

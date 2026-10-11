@@ -32,12 +32,36 @@ export const MCP_TOOLS = [
   ['get_booking_link', 'Where a guest books directly (the request form), optionally checking dates in the same call; Airbnb only as a fallback.'],
 ];
 
+// MCP server card (SEP-2127, merged 2026-10-06; wire format in
+// modelcontextprotocol/ext-server-card). The spec reserves no path for an SSE
+// server; this is the one scanners probe and the catalogs point at.
+export const SERVER_CARD_URL = `${ORIGIN}/.well-known/mcp/server-card.json`;
+export const SERVER_CARD_MEDIA_TYPE = 'application/mcp-server-card+json';
+// Exactly what the server negotiates: mcp 1.30.0's SUPPORTED_PROTOCOL_VERSIONS,
+// read from the running container 2026-10-11. Update on an SDK upgrade.
+export const MCP_PROTOCOL_VERSIONS = ['2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25'];
+
+export const API_CATALOG_URL = `${ORIGIN}/.well-known/api-catalog`;
+// ARD v0.91 moved the manifest to ard.json; ai-catalog.json is its predecessor
+// and what the AI Catalog spec and current scanners still read. Same bytes at
+// both.
+export const ARD_URL = `${ORIGIN}/.well-known/ard.json`;
+export const AI_CATALOG_URL = `${ORIGIN}/.well-known/ai-catalog.json`;
+export const SKILLS_INDEX_URL = `${ORIGIN}/.well-known/agent-skills/index.json`;
+export const skillUrl = (name) => `${ORIGIN}/.well-known/agent-skills/${name}/SKILL.md`;
+
 // Public read-only availability and quote for one stay. No auth, no guest
 // data. Allowed in robots.txt although the rest of /api/ is not.
 export const AVAILABILITY_API_PATH = '/api/booking-requests/check';
 export const AVAILABILITY_API_URL = `${ORIGIN}${AVAILABILITY_API_PATH}`;
 
-export const PROPERTY_IDS = ['wolf-creek-lodge', 'wolf-creek-apartment', 'wolf-creek-retreat-combo'];
+// OpenAPI description of that API (committed: lib/openapi-availability.json)
+// and its status endpoint; service-desc and status in the api-catalog.
+export const OPENAPI_URL = `${ORIGIN}/openapi.json`;
+export const OPENAPI_MEDIA_TYPE = 'application/vnd.oai.openapi+json;version=3.1';
+export const HEALTH_URL = `${ORIGIN}/api/health`;
+
+export const PROPERTY_IDS =['wolf-creek-lodge', 'wolf-creek-apartment', 'wolf-creek-retreat-combo'];
 
 // Direct quotes are before tax; the owner confirmed 2026-10-11 that taxes are
 // added to direct bookings and reported. Same sentence as TAX_NOTE in
