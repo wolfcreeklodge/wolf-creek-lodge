@@ -63,6 +63,13 @@ services:
       # the same switch the website uses.
       BOOKING_FORM_ENABLED: ${BOOKING_FORM_ENABLED:-false}
       DATABASE_URL: postgresql://wolfcreek:${POSTGRES_PASSWORD:-changeme_in_production}@database:5432/wolfcreek
+    # get_winter_info reads website/data/winter-2026-27.json at a path relative
+    # to server.py (/app/../website/data). The image is built from
+    # ./mcp-server alone, so without this mount the file is missing and the
+    # tool told every agent "Winter reference data is unavailable" (found
+    # 2026-10-11). Read-only: the website owns the file.
+    volumes:
+      - ./website/data:/website/data:ro
     depends_on:
       database:
         condition: service_healthy
