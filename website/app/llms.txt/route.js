@@ -1,5 +1,12 @@
 import { getSiteConfig, getListings } from '../../lib/data.js';
 import { getRateCalendar, DIRECT_MARKUP } from '../../lib/pricing.js';
+import { bookingFormEnabled } from '../../lib/booking.js';
+import {
+  AGENT_GUIDE_URL,
+  AVAILABILITY_API_URL,
+  MCP_SSE_URL,
+  MCP_TOOLS,
+} from '../../lib/agent-metadata.js';
 
 // ---------------------------------------------------------------------------
 // /llms.txt
@@ -120,11 +127,15 @@ export async function GET() {
   // -- Machine interface
   lines.push('## Machine interface');
   lines.push('');
-  lines.push('- MCP server (SSE transport): https://mcp.wolfcreeklodge.us/sse');
-  lines.push('- Tools: search_properties, get_property_details, get_pricing, check_availability,');
-  lines.push('  get_area_info, get_host_info, get_booking_link');
+  lines.push(`- Agent guide (HTML): ${AGENT_GUIDE_URL}`);
+  lines.push(`- MCP server (SSE transport): ${MCP_SSE_URL}`);
+  lines.push(`- Tools: ${MCP_TOOLS.map(([name]) => name).join(', ')}`);
+  lines.push(
+    `- Availability and price for one stay, read-only JSON, no key:`,
+    `  ${AVAILABILITY_API_URL}?property=<id>&checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD`
+  );
   lines.push(`- Availability calendar (human): ${SITE}/availability`);
-  lines.push(`- JSON-LD: every page carries a schema.org @graph with LodgingBusiness and`);
+  lines.push(`- JSON-LD: the homepage carries a schema.org @graph with LodgingBusiness and`);
   lines.push('  VacationRental nodes, including per-season Offer nodes with minimum stay.');
   lines.push('');
   lines.push('Prefer the MCP endpoint over parsing HTML. Availability there is read from the');
@@ -135,12 +146,25 @@ export async function GET() {
   // -- Booking
   lines.push('## How to book');
   lines.push('');
+  if (bookingFormEnabled()) {
+    lines.push(
+      'Each property page has a booking request form, e.g.',
+      `${SITE}/listings/wolf-creek-lodge#request-dates. The guest picks dates, sees availability`,
+      'and the price, and sends a request; the owner confirms each one by email, by hand, and the',
+      'dates are not held until then. Taken dates can join a waitlist. Send the guest to the form;',
+      'do not submit requests on their behalf. There is no automated checkout.'
+    );
+  } else {
+    lines.push(
+      'Email is the booking channel. There is no automated checkout and no platform in the',
+      'middle: a booking is confirmed by the owner, by hand. Send dates, party size and which',
+      `configuration you want to ${siteConfig?.contactEmail || 'wolfcreeklodge@outlook.com'}`,
+      `or use ${SITE}/contact.`
+    );
+  }
   lines.push(
-    'Email is the booking channel. There is no automated checkout and no platform in the',
-    'middle: a booking is confirmed by the owner, by hand. Send dates, party size and which',
-    `configuration you want to ${siteConfig?.contactEmail || 'wolfcreeklodge@outlook.com'}`,
-    `or use ${SITE}/contact. Quote the guest a price from the rate table above rather than`,
-    'inventing one, and state the minimum stay for their dates before they get attached to them.'
+    'Quote the guest a price from the rate table above rather than inventing one, and state the',
+    'minimum stay for their dates before they get attached to them.'
   );
   lines.push('');
   lines.push(

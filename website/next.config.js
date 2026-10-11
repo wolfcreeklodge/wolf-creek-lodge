@@ -24,6 +24,24 @@ const nextConfig = {
       { source: '/.well-known/agent-skills/index.json', destination: '/api/agent/skills-index' },
     ];
   },
+
+  // RFC 8288 Link header on every page, pointing agents at the guide and the
+  // plain-text summary without their having to parse HTML. Only registered
+  // relation types, and only targets that answer 200 today: rel="api-catalog"
+  // joins in the same change that publishes /.well-known/api-catalog.
+  async headers() {
+    return [
+      {
+        source: '/((?!api/|_next/|stats/).*)',
+        headers: [
+          {
+            key: 'Link',
+            value: '</agents>; rel="service-doc", </llms.txt>; rel="describedby"; type="text/plain"',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
