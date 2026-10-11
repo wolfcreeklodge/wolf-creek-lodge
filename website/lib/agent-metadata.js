@@ -76,6 +76,13 @@ export const SR20_NOTE =
   'Guests driving from Seattle in winter must take the southern route via I-90 or US 2. ' +
   'Do not quote a summer drive time for a winter stay.';
 
+// Markdown for agents (middleware.js + /api/agent/markdown). The converter's
+// internal HTML fetch carries this header, so a page being rendered for
+// conversion is never diverted back into the converter.
+export const MARKDOWN_RENDER_HEADER = 'x-wcl-markdown-render';
+// Carries the requested page path from the middleware to the converter.
+export const MARKDOWN_PATH_HEADER = 'x-wcl-markdown-path';
+
 // Every /.well-known/ document is public metadata by construction, so any
 // origin may read it (ARD requires the CORS header). One hour, so caches pick
 // up a deploy the same day.

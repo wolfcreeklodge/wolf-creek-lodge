@@ -136,6 +136,7 @@ export async function GET() {
     `  ${AVAILABILITY_API_URL}?property=<id>&checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD`
   );
   lines.push(`- Availability calendar (human): ${SITE}/availability`);
+  lines.push('- Every page is also available as Markdown: send Accept: text/markdown.');
   lines.push(`- JSON-LD: the homepage carries a schema.org @graph with LodgingBusiness and`);
   lines.push('  VacationRental nodes, including per-season Offer nodes with minimum stay.');
   lines.push('');
