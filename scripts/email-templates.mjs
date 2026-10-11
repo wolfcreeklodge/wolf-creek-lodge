@@ -109,7 +109,7 @@ function stayRows(p) {
     ['Where', p.propertyTitle],
     ['When', formatStay(p)],
     ['Guests', p.numGuests],
-    ['Direct price', p.quotedTotal ? `${money(p.quotedTotal)} (as quoted when you asked)` : null],
+    ['Direct price', p.quotedTotal ? `${money(p.quotedTotal)} before tax (as quoted when you asked)` : null],
     ['Reference', p.reference],
   ];
 }
@@ -189,6 +189,31 @@ const templates = {
           detailsTable(rows) +
           `<p style="margin:0"><a href="${esc(link)}" style="color:${COLORS.creekDark};font-weight:bold">Open the request in the CRM</a></p>`,
         footerHtml: 'Sent by the booking request form on wolfcreeklodge.us.',
+      }),
+    };
+  },
+
+  // A message from the /contact form, to the owner. Reply-To is the sender
+  // (send-email.mjs reads payload.replyTo), so answering is a plain reply.
+  contact_message(p) {
+    const oneLine = (s) => String(s ?? '').replace(/[\r\n]+/g, ' ').trim();
+    const subject = `[WEBSITE] ${oneLine(p.subject)} from ${oneLine(p.name)}`;
+    const intro =
+      `${oneLine(p.name)} sent a message through the contact form on wolfcreeklodge.us. ` +
+      'Reply to this email to answer them.';
+    const rows = [
+      ['From', p.name],
+      ['Email', p.email],
+      ['Subject', p.subject],
+      ['Dates', p.dates],
+      ['Guests', p.guests],
+    ];
+    return {
+      subject,
+      text: `${intro}\n\n${detailsText(rows)}\n\n${p.message}`,
+      html: layout({
+        bodyHtml: paragraphsToHtml(intro) + detailsTable(rows) + paragraphsToHtml(p.message),
+        footerHtml: 'Sent by the contact form on wolfcreeklodge.us.',
       }),
     };
   },

@@ -1451,6 +1451,13 @@ h1, h2, h3, h4 {
   resize: vertical;
 }
 
+.form-error {
+  margin: 0 0 1rem;
+  color: var(--color-ember);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

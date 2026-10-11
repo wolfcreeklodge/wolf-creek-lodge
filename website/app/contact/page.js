@@ -27,7 +27,7 @@ export default async function ContactPage() {
             {/* Form */}
             <div>
               <h2 className="listing-section-title mb-3">Send Us a Message</h2>
-              <ContactForm />
+              <ContactForm contactEmail={siteConfig.contactEmail} />
             </div>
 
             {/* Sidebar */}
