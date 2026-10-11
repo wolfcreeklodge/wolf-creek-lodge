@@ -1,5 +1,5 @@
 """
-Wolfridge Retreats MCP Server
+Wolfcreek Lodge MCP Server
 =============================
 A Model Context Protocol server exposing vacation-rental tools, resources, and
 prompts for the Wolf Creek Lodge properties in Winthrop, WA.
@@ -30,9 +30,9 @@ _transport = os.environ.get("MCP_TRANSPORT", "stdio")
 _port = int(os.environ.get("MCP_PORT", "8081"))
 
 mcp = FastMCP(
-    "wolfridge-retreats",
+    "wolfcreek-lodge",
     instructions=(
-        "Vacation-rental assistant for Wolfridge Retreats in Winthrop, WA (Methow Valley). "
+        "Vacation-rental assistant for Wolfcreek Lodge in Winthrop, WA (Methow Valley). "
         "Two physical units, three bookable configurations, and they are MUTUALLY EXCLUSIVE: "
         "wolf-creek-retreat-combo is the house and the apartment let together, so booking it "
         "blocks wolf-creek-lodge and wolf-creek-apartment for those dates, and booking either "
@@ -109,7 +109,7 @@ def _property_summary(prop: dict) -> dict:
 
 @mcp.tool(
     description=(
-        "Search available Wolfridge Retreats properties in Winthrop, WA. "
+        "Search available Wolfcreek Lodge properties in Winthrop, WA. "
         "Returns a structured list with descriptions, capacity, amenities, "
         "ratings, and pricing for each property. Optionally filter by minimum "
         "guest capacity."
@@ -141,7 +141,7 @@ def search_properties(guests: int | None = None) -> dict:
 
 @mcp.tool(
     description=(
-        "Get full details for a specific Wolfridge Retreats property. "
+        "Get full details for a specific Wolfcreek Lodge property. "
         "Returns description, bedrooms, bathrooms, amenities, house rules, "
         "highlights, pricing, and reviews. "
         "Valid property IDs: wolf-creek-lodge, wolf-creek-apartment, wolf-creek-retreat-combo."
@@ -178,7 +178,7 @@ def get_property_details(property_id: str) -> dict:
 
 @mcp.tool(
     description=(
-        "Quote pricing for a Wolfridge Retreats property. Pass check_in and check_out "
+        "Quote pricing for a Wolfcreek Lodge property. Pass check_in and check_out "
         "(YYYY-MM-DD) for an exact, date-aware quote: rates vary by season and by day of "
         "week, so a date-less quote is an approximation only. Falls back to a flat "
         "nightly estimate when only 'nights' is given. Returns the per-night breakdown, "
@@ -316,7 +316,7 @@ def get_pricing(
 
 @mcp.tool(
     description=(
-        "Check availability for a Wolfridge Retreats property. Takes property_id, "
+        "Check availability for a Wolfcreek Lodge property. Takes property_id, "
         "check_in date (YYYY-MM-DD), and check_out date (YYYY-MM-DD). "
         "Checks against the reservation database for conflicts. Also explains the mutual "
         "exclusion constraint between listings. "
@@ -640,7 +640,7 @@ def get_winter_info() -> dict:
 @mcp.resource(
     uri="properties://list",
     name="All Properties",
-    description="Summary list of all Wolfridge Retreats properties.",
+    description="Summary list of all Wolfcreek Lodge properties.",
 )
 def list_properties() -> dict:
     """Resource: summary of all properties."""
@@ -671,7 +671,7 @@ def property_resource(property_id: str) -> dict:
 @mcp.prompt(
     name="plan_trip",
     description=(
-        "Help an AI agent plan a trip to Winthrop, WA staying at Wolfridge Retreats. "
+        "Help an AI agent plan a trip to Winthrop, WA staying at Wolfcreek Lodge. "
         "Gathers group size, dates, interests, and budget to recommend the best property "
         "and build an itinerary."
     ),
@@ -679,7 +679,7 @@ def property_resource(property_id: str) -> dict:
 def plan_trip() -> str:
     """Return a prompt template for trip planning."""
     return (
-        "You are a helpful travel planning assistant for Wolfridge Retreats in "
+        "You are a helpful travel planning assistant for Wolfcreek Lodge in "
         "Winthrop, WA (Methow Valley). Help the user plan their trip by asking:\n\n"
         "1. **Group size** \u2013 How many guests? (This determines which property fits.)\n"
         "2. **Dates** \u2013 When are you thinking of visiting? (Season affects activities.)\n"

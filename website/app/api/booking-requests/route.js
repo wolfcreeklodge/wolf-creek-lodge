@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
+  bookingFormEnabled,
   createBookingRequest,
   hashClientAddress,
   validateContact,
@@ -15,6 +16,17 @@ export const dynamic = 'force-dynamic';
 // If spam gets through anyway, Cloudflare Turnstile is the next step: free,
 // and the site already sits behind Cloudflare.
 export async function POST(request) {
+  // BOOKING_FORM_ENABLED used to hide only the form, so this endpoint took
+  // requests from anyone who POSTed directly -- guests and requests written,
+  // emails queued -- while the site said nothing of the kind was open. Closed
+  // means closed. The read-only availability check at ./check stays public.
+  if (!bookingFormEnabled()) {
+    return NextResponse.json(
+      { error: 'Online booking requests are not open yet.' },
+      { status: 404 }
+    );
+  }
+
   let body;
   try {
     body = await request.json();
